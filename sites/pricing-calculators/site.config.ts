@@ -7,7 +7,7 @@ import { GA4_PLACEHOLDER_ID, PLACEHOLDER_ORGANIZATION_NAME, validateSiteConfig }
  * later WITHOUT editing this file or any code, by setting these two
  * environment variables in the Cloudflare Pages project settings:
  *
- *   PUBLIC_SITE_DOMAIN           e.g. "pricingcalcs.com" (no protocol)
+ *   PUBLIC_SITE_DOMAIN           e.g. "thebusinesscalc.com" (no protocol)
  *   PUBLIC_GA4_MEASUREMENT_ID    e.g. "G-XXXXXXXXXX"
  *
  * Until PUBLIC_SITE_DOMAIN is set, `domain` stays `null`. That puts the
@@ -25,7 +25,7 @@ const ga4MeasurementId = envGa4Id ? envGa4Id : GA4_PLACEHOLDER_ID;
 
 // Optional at launch. While unset, the footer credits the site name and the
 // contact/privacy pages say no inbox is published yet.
-//   PUBLIC_CONTACT_EMAIL         e.g. "hello@pricingcalcs.com"
+//   PUBLIC_CONTACT_EMAIL         e.g. "hello@thebusinesscalc.com"
 //   PUBLIC_ORGANIZATION_NAME     e.g. "Jane Doe" or "Acme Tools LLC"
 const contactEmail = process.env.PUBLIC_CONTACT_EMAIL?.trim() || "placeholder@example.com";
 const organizationName = process.env.PUBLIC_ORGANIZATION_NAME?.trim() || PLACEHOLDER_ORGANIZATION_NAME;
@@ -42,7 +42,7 @@ const inContentSlotId = process.env.PUBLIC_ADSENSE_SLOT_IN_CONTENT?.trim() || un
 
 export const siteConfig = validateSiteConfig({
   siteId: "pricing-calculators",
-  siteName: "Pricing & Profit Calculators",
+  siteName: "The Business Calc",
   domain,
   organizationName,
   defaultDescription:

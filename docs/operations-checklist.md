@@ -61,8 +61,8 @@ only**, so preview deploys stay `noindex`:
 
 | Variable | Value |
 |---|---|
-| `PUBLIC_SITE_DOMAIN` | `yourdomain.com` (no `https://`, no `www`) |
-| `PUBLIC_CONTACT_EMAIL` | `hello@yourdomain.com` (see Email Routing below) |
+| `PUBLIC_SITE_DOMAIN` | `thebusinesscalc.com` (no `https://`, no `www`) |
+| `PUBLIC_CONTACT_EMAIL` | `hello@thebusinesscalc.com` (see Email Routing below) |
 | `PUBLIC_ORGANIZATION_NAME` | Optional: your name or business name |
 | `PUBLIC_GA4_MEASUREMENT_ID` | Optional: `G-XXXXXXXXXX` (read section 6 first) |
 | `PUBLIC_ADSENSE_CLIENT_ID` | Later: `ca-pub-…` when you apply to AdSense (section 4) |
@@ -76,11 +76,11 @@ deployment (Deployments → ⋯ → Retry deployment, or push a commit).
 
 - Buy the domain (Cloudflare Registrar sells at cost). Turn on **auto-renew**
   and keep the registrar lock on. WHOIS privacy is automatic at Cloudflare.
-- Pages project → Custom domains → add **both** `yourdomain.com` and
-  `www.yourdomain.com`.
+- Pages project → Custom domains → add **both** `thebusinesscalc.com` and
+  `www.thebusinesscalc.com`.
 - Redirect `www` → apex: Rules → **Redirect Rules** → create a rule:
-  hostname equals `www.yourdomain.com` → dynamic redirect to
-  `concat("https://yourdomain.com", http.request.uri.path)`, status **301**,
+  hostname equals `www.thebusinesscalc.com` → dynamic redirect to
+  `concat("https://thebusinesscalc.com", http.request.uri.path)`, status **301**,
   preserve query string.
 - DNS → Settings → enable **DNSSEC**.
 - Optional: a **CAA** record allowing only the CA Cloudflare uses, so no
@@ -113,11 +113,11 @@ reading it.
 
 ### 1.6 Email Routing for the contact address [launch]
 
-- Email → **Email Routing** → enable → create `hello@yourdomain.com` →
+- Email → **Email Routing** → enable → create `hello@thebusinesscalc.com` →
   forward to your personal inbox. It's free, and Cloudflare adds the MX/SPF
   records.
 - Add a DMARC record, e.g. TXT `_dmarc` = `v=DMARC1; p=quarantine;
-  rua=mailto:hello@yourdomain.com`, so others can't spoof your domain.
+  rua=mailto:hello@thebusinesscalc.com`, so others can't spoof your domain.
 - Set `PUBLIC_CONTACT_EMAIL` to that address and redeploy.
 
 ### 1.7 Analytics options [launch, optional]
@@ -149,8 +149,8 @@ reading it.
   - `/llms.txt` lists your domain's URLs.
   - `/break-even` returns 200 with no redirect; `/break-even/` redirects to it.
   - View source on one page: `<meta name="robots" content="index, follow">`,
-    and the canonical is `https://yourdomain.com/...`.
-  - `www.yourdomain.com` 301-redirects to the apex.
+    and the canonical is `https://thebusinesscalc.com/...`.
+  - `www.thebusinesscalc.com` 301-redirects to the apex.
   - `https://<project>.pages.dev` still works; its canonical points at your
     domain, so it won't compete in search.
 - **[ongoing] Rollback:** Pages → Deployments → choose a previous good
@@ -227,7 +227,7 @@ than shipping broken markup.
   footer — done).
 - **[you]** In AdSense, add the site, choose "Meta tag" verification, set
   `PUBLIC_ADSENSE_CLIENT_ID`, redeploy, then click Verify. Check that
-  `https://yourdomain.com/ads.txt` shows your `pub-` line.
+  `https://thebusinesscalc.com/ads.txt` shows your `pub-` line.
 - Expect review to take days to weeks. A first rejection for "low-value
   content" is common on new sites: add pages and reapply.
 
@@ -306,7 +306,7 @@ than shipping broken markup.
 
 - **[launch] Google Search Console:** add the domain property (verify by DNS
   — Cloudflare can add the record automatically) and submit
-  `https://yourdomain.com/sitemap-index.xml`.
+  `https://thebusinesscalc.com/sitemap-index.xml`.
 - **[launch] Bing Webmaster Tools:** import from Search Console and submit the
   same sitemap. Bing feeds ChatGPT search and Copilot.
 - **[launch, choose one] Analytics:**

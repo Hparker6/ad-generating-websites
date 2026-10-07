@@ -94,7 +94,7 @@ loads, or inline when running a build):
 
 | Variable | Effect when set |
 |---|---|
-| `PUBLIC_SITE_DOMAIN` | Bare hostname, e.g. `pricingcalcs.com` (no protocol). Flips the site to production-ready: indexable, real canonical/OG URLs, `robots.txt` allows crawling. |
+| `PUBLIC_SITE_DOMAIN` | Bare hostname, e.g. `thebusinesscalc.com` (no protocol). Flips the site to production-ready: indexable, real canonical/OG URLs, `robots.txt` allows crawling. |
 | `PUBLIC_GA4_MEASUREMENT_ID` | A real GA4 ID, e.g. `G-XXXXXXXXXX`. Enables the GA4 script. Leave unset to keep analytics fully disabled. |
 | `PUBLIC_CONTACT_EMAIL` | A monitored inbox shown on `/contact` and `/privacy` (pricing-calculators). |
 | `PUBLIC_ORGANIZATION_NAME` | Name credited in the footer, `/about`, `/privacy`, and Organization JSON-LD (pricing-calculators). |

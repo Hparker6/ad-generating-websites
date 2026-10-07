@@ -25,9 +25,9 @@ Repeat with a separate Pages project for every other site, swapping the
 
 | Variable | Required? | Purpose |
 |---|---|---|
-| `PUBLIC_SITE_DOMAIN` | No (until launch) | Bare hostname, e.g. `pricingcalcs.com`. Unset = site stays in safe "no domain yet" mode (noindex, `robots.txt` disallow). See the root README. |
+| `PUBLIC_SITE_DOMAIN` | No (until launch) | Bare hostname, e.g. `thebusinesscalc.com`. Unset = site stays in safe "no domain yet" mode (noindex, `robots.txt` disallow). See the root README. |
 | `PUBLIC_GA4_MEASUREMENT_ID` | No | A real GA4 ID, e.g. `G-XXXXXXXXXX`. Unset = analytics stay fully disabled. |
-| `PUBLIC_CONTACT_EMAIL` | Recommended | A monitored inbox, e.g. `hello@pricingcalcs.com`. Shown on `/contact` and `/privacy`. Unset = those pages say an address is coming. |
+| `PUBLIC_CONTACT_EMAIL` | Recommended | A monitored inbox, e.g. `hello@thebusinesscalc.com`. Shown on `/contact` and `/privacy`. Unset = those pages say an address is coming. |
 | `PUBLIC_ADSENSE_CLIENT_ID` / `PUBLIC_ADS_ENABLED` / `PUBLIC_ADSENSE_SLOT_IN_CONTENT` | Later | AdSense, in stages — see [Enabling ads later](#enabling-ads-later). |
 | `PUBLIC_ORGANIZATION_NAME` | No | Your name or business name. Used in the footer copyright, `/about`, `/privacy`, and Organization structured data. Unset = the site name is credited instead. |
 
