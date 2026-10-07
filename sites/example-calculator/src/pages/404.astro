@@ -1,0 +1,18 @@
+---
+import { buildMeta } from "@repo/seo";
+import Layout from "@repo/ui/components/Layout.astro";
+import { siteConfig } from "../../site.config.ts";
+
+const meta = buildMeta(siteConfig, {
+  title: "Page not found",
+  description: "The page you're looking for doesn't exist.",
+  path: "/404",
+  noindex: true,
+});
+---
+
+<Layout config={siteConfig} meta={meta}>
+  <h1>Page not found</h1>
+  <p>The page you're looking for doesn't exist.</p>
+  <p><a href="/">Back to the calculator</a></p>
+</Layout>

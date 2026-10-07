@@ -1,0 +1,167 @@
+---
+import {
+  buildMeta,
+  hasPlaceholderContactEmail,
+  hasPlaceholderOrganization,
+  isAnalyticsEnabled,
+} from "@repo/seo";
+import Layout from "@repo/ui/components/Layout.astro";
+import { siteConfig } from "../../site.config";
+import { footerColumns, footerTagline, navItems } from "../site-nav";
+import { formatUpdated } from "../tools";
+
+const meta = buildMeta(siteConfig, {
+  title: "Privacy Policy",
+  description:
+    "How this site handles data: every calculation runs in your browser, and the costs and prices you type are never sent to a server or to analytics.",
+  path: "/privacy",
+});
+
+// Every section is written against what the build actually has switched on,
+// so the policy can't claim practices the site doesn't follow. Re-read it
+// whenever analytics or ads change.
+const analyticsOn = isAnalyticsEnabled(siteConfig);
+const adsOn = siteConfig.ads.enabled;
+const contactIsPlaceholder = hasPlaceholderContactEmail(siteConfig);
+const identityIsPlaceholder = hasPlaceholderOrganization(siteConfig);
+const operator = identityIsPlaceholder ? `the operator of ${siteConfig.siteName}` : siteConfig.organizationName;
+const lastUpdated = "2026-10-06";
+---
+
+<Layout
+  config={siteConfig}
+  meta={meta}
+  navItems={navItems}
+  footerColumns={footerColumns}
+  footerTagline={footerTagline}
+>
+  <div class="page-header">
+    <h1 class="page-title">Privacy Policy</h1>
+    <p class="lede">
+      The short version: the numbers you type into a calculator never leave your browser.
+    </p>
+    <p class="page-meta">Last updated <time datetime={lastUpdated}>{formatUpdated(lastUpdated)}</time></p>
+  </div>
+
+  <section class="section prose">
+    <h2 class="section-title">Who this policy covers</h2>
+    <p>
+      This policy explains how {siteConfig.siteName} ("the site", "we") handles information when you
+      visit it. The site is operated by {operator}.
+    </p>
+  </section>
+
+  <section class="section prose">
+    <h2 class="section-title">Calculator inputs</h2>
+    <p>
+      Every calculator runs entirely in your browser. The costs, prices, rates, and other figures you
+      enter are never transmitted to us, never stored on a server, and never included in analytics.
+    </p>
+    <p>
+      If you use "Copy link to this result", the link contains the figures you entered so that it
+      reopens with them filled in. That link only goes wherever you choose to paste it.
+    </p>
+  </section>
+
+  <section class="section prose">
+    <h2 class="section-title">Analytics</h2>
+    {
+      analyticsOn ? (
+        <Fragment>
+          <p>
+            We use Google Analytics 4 to understand how the site is used — for example, which pages are
+            visited, roughly where visitors are located (derived from IP address, which is not stored in
+            full), what device and browser they use, and how they arrived. We also record anonymous
+            events noting that a calculation completed or failed, or that a preset or link was used —
+            never the values you entered.
+          </p>
+          <p>
+            Google Analytics sets first-party cookies (named <code>_ga</code> and <code>_ga_*</code>) to
+            distinguish visits. Google processes this data as described in
+            <a href="https://policies.google.com/privacy" rel="noopener">Google's privacy policy</a>.
+            You can opt out with the
+            <a href="https://tools.google.com/dlpage/gaoptout" rel="noopener">Google Analytics opt-out browser add-on</a>
+            or by blocking cookies in your browser; the calculators work the same either way.
+          </p>
+        </Fragment>
+      ) : (
+        <p>
+          The site does not currently use any analytics service. No usage data is collected and no
+          analytics cookies are set.
+        </p>
+      )
+    }
+  </section>
+
+  <section class="section prose">
+    <h2 class="section-title">Advertising</h2>
+    {
+      adsOn ? (
+        <p>
+          The site shows ads served by Google AdSense. Google and its partners use cookies to serve ads
+          based on your visits to this and other sites. You can learn how Google uses this information at
+          <a href="https://policies.google.com/technologies/ads" rel="noopener">How Google uses information from sites that use its services</a>,
+          and turn off personalized ads at
+          <a href="https://adssettings.google.com" rel="noopener">Google Ad Settings</a>.
+        </p>
+      ) : (
+        <p>
+          The site does not currently show ads, and no advertising scripts or cookies are loaded. If
+          that changes, this section will be updated before ads appear, to name the ad network and
+          explain your choices.
+        </p>
+      )
+    }
+  </section>
+
+  <section class="section prose">
+    <h2 class="section-title">Hosting and security</h2>
+    <p>
+      The site is served by Cloudflare. Like any web host, Cloudflare processes connection data such
+      as your IP address and browser details in order to deliver pages and protect the site against
+      abuse. See <a href="https://www.cloudflare.com/privacypolicy/" rel="noopener">Cloudflare's privacy policy</a>.
+    </p>
+  </section>
+
+  <section class="section prose">
+    <h2 class="section-title">What we don't do</h2>
+    <ul>
+      <li>We don't ask you to create an account or give us your name or email to use any tool.</li>
+      <li>We don't sell or share personal information for money.</li>
+      <li>We don't knowingly collect information from children under 13.</li>
+    </ul>
+  </section>
+
+  <section class="section prose">
+    <h2 class="section-title">Your choices and rights</h2>
+    <p>
+      Depending on where you live — for example in the EU, UK, or California — you may have the right
+      to ask what personal data is held about you, to have it corrected or deleted, or to object to
+      its use. Because the site itself stores no personal data, most requests concern the third-party
+      services above, which you can also contact directly through the links provided.
+      {!contactIsPlaceholder && " You can also reach us at the address below."}
+    </p>
+  </section>
+
+  <section class="section prose">
+    <h2 class="section-title">Changes to this policy</h2>
+    <p>
+      If the site's data practices change — for example, when analytics or advertising is switched on
+      — this page will be updated first, and the date at the top will change.
+    </p>
+  </section>
+
+  <section class="section prose">
+    <h2 class="section-title">Contact</h2>
+    {
+      contactIsPlaceholder ? (
+        <p>A contact address for privacy questions will be published here shortly.</p>
+      ) : (
+        <p>
+          Questions about this policy can be sent to
+          <a href={`mailto:${siteConfig.contactEmail}`}>{siteConfig.contactEmail}</a>.
+        </p>
+      )
+    }
+  </section>
+</Layout>

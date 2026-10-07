@@ -1,0 +1,444 @@
+---
+import { calculateMarkupMargin } from "@repo/calculators/markup-margin";
+import { buildMeta } from "@repo/seo";
+import { formatCurrency, formatPercentValue, priceSplitLayout } from "@repo/ui";
+import AdSlot from "@repo/ui/components/AdSlot.astro";
+import FaqList from "@repo/ui/components/FaqList.astro";
+import Layout from "@repo/ui/components/Layout.astro";
+import NextStep from "@repo/ui/components/NextStep.astro";
+import { siteConfig } from "../../site.config";
+import MoreTools from "../components/MoreTools.astro";
+import { footerColumns, footerTagline, navItems } from "../site-nav";
+import { formatUpdated, getTool, toolStructuredData } from "../tools";
+
+const tool = getTool("/markup-vs-margin");
+
+const meta = buildMeta(siteConfig, {
+  title: "Markup vs. Margin Calculator (With Formulas)",
+  description:
+    "Enter a unit cost and selling price to see both the markup percentage and the margin percentage — and understand why they're not the same number.",
+  path: "/markup-vs-margin",
+});
+
+const defaults = { unitCost: 60, sellingPrice: 100 };
+const seed = calculateMarkupMargin(defaults);
+if (!seed.ok) throw new Error("Default markup/margin inputs must be valid");
+const split = priceSplitLayout(defaults.sellingPrice, defaults.unitCost);
+
+const presets = [
+  { label: "Retail product", values: { unitCost: 15, sellingPrice: 25 } },
+  { label: "Service business", values: { unitCost: 150, sellingPrice: 500 } },
+  { label: "Low-margin goods", values: { unitCost: 10, sellingPrice: 12 } },
+];
+
+const faqs = [
+  {
+    question: "Aren't markup and margin the same thing?",
+    answer:
+      "No, even though they're often confused. Markup is profit expressed as a percentage of cost. Margin is the same dollar profit expressed as a percentage of selling price. Because cost and price are different numbers, the two percentages are always different unless profit is zero.",
+  },
+  {
+    question: "Why does a 50% markup not equal a 50% margin?",
+    answer:
+      "A 50% markup on a $100 cost gives a $150 price, meaning $50 profit on $100 of cost. That same $50 profit is only 33.3% of the $150 selling price — a 33.3% margin. Markup is always the larger number whenever there's a profit.",
+  },
+  {
+    question: "Which one should I use to set prices?",
+    answer:
+      "Margin is usually more useful for profitability planning, since it tells you what share of each sales dollar you keep. Markup is common in retail and wholesale pricing conventions. Many pricing mistakes come from applying one percentage while assuming it means the other.",
+  },
+  {
+    question: "What if the selling price is lower than the cost?",
+    answer:
+      "Both markup and margin come out negative, which correctly signals you're selling at a loss on that item.",
+  },
+  {
+    question: "Can margin ever reach 100%?",
+    answer:
+      "Only if your cost is zero, which is why the selling price calculator rejects a 100% margin target. Markup, by contrast, has no upper limit — a $1 cost sold for $100 is a 9,900% markup but a 99% margin.",
+  },
+];
+
+const structuredData = toolStructuredData(tool, meta.description);
+---
+
+<Layout
+  config={siteConfig}
+  meta={meta}
+  structuredData={structuredData}
+  navItems={navItems}
+  footerColumns={footerColumns}
+  footerTagline={footerTagline}
+>
+  <div class="page-header">
+    <h1 class="page-title">{tool.name}</h1>
+    <p class="lede">Markup is profit ÷ cost; margin is profit ÷ price. An item that costs $60 and sells for $100 has a 66.7% markup but only a 40% margin. Enter your own numbers below.</p>
+    <p class="page-meta">Updated <time datetime={tool.updated}>{formatUpdated(tool.updated)}</time> · Standard cost-accounting formulas, shown in full below.</p>
+  </div>
+
+  <div class="calc-grid">
+    <form id="calc-form" class="panel" novalidate>
+      <div class="preset-row">
+        <span class="preset-label">Try an example</span>
+        {
+          presets.map((preset) => (
+            <button type="button" class="preset" data-preset={JSON.stringify(preset.values)} aria-pressed="false">
+              {preset.label}
+            </button>
+          ))
+        }
+      </div>
+
+      <div class="field-stack">
+        <div class="field">
+          <label for="unitCost">Unit cost</label>
+          <div class="input-row">
+            <button type="button" class="stepper" data-step-for="unitCost" data-step-delta="-1" aria-label="Decrease unit cost by 1">−</button>
+            <div class="input-affix">
+              <span class="affix affix-start" aria-hidden="true">$</span>
+              <input type="number" id="unitCost" name="unitCost" min="0.01" max="1000000" step="0.01" value="60" inputmode="decimal" />
+            </div>
+            <button type="button" class="stepper" data-step-for="unitCost" data-step-delta="1" aria-label="Increase unit cost by 1">+</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="sellingPrice">Selling price</label>
+          <div class="input-row">
+            <button type="button" class="stepper" data-step-for="sellingPrice" data-step-delta="-1" aria-label="Decrease selling price by 1">−</button>
+            <div class="input-affix">
+              <span class="affix affix-start" aria-hidden="true">$</span>
+              <input type="number" id="sellingPrice" name="sellingPrice" min="0.01" max="1000000" step="0.01" value="100" inputmode="decimal" />
+            </div>
+            <button type="button" class="stepper" data-step-for="sellingPrice" data-step-delta="1" aria-label="Increase selling price by 1">+</button>
+          </div>
+        </div>
+      </div>
+
+      <ul id="form-errors" class="error-list" aria-live="polite"></ul>
+
+      <button type="button" class="copy-link" data-copy-link aria-live="polite">Copy link to this result</button>
+    </form>
+
+    <section class="answer" aria-label="Result" aria-live="polite">
+      <div class="answer-head">
+        <span class="answer-label">Margin — share of price you keep</span>
+        <strong class="answer-value" id="answer-value">40.0%</strong>
+        <p class="answer-sentence" id="answer-sentence">
+          The same profit is a 66.7% markup on cost. Both describe $40.00.
+        </p>
+      </div>
+
+      <div class="equation" data-label="Markup">
+        <span class="eq-term">
+          <span class="eq-value" id="eq-mk-profit">$40.00</span>
+          <span class="eq-name">Profit</span>
+        </span>
+        <span class="eq-op" aria-hidden="true">÷</span>
+        <span class="visually-hidden">divided by</span>
+        <span class="eq-term">
+          <span class="eq-value" id="eq-mk-cost">$60.00</span>
+          <span class="eq-name">the COST</span>
+        </span>
+        <span class="eq-op" aria-hidden="true">=</span>
+        <span class="visually-hidden">equals</span>
+        <span class="eq-term is-result">
+          <span class="eq-value" id="eq-mk-result">66.7%</span>
+          <span class="eq-name">Markup</span>
+        </span>
+      </div>
+
+      <div class="equation" data-label="Margin">
+        <span class="eq-term">
+          <span class="eq-value" id="eq-mg-profit">$40.00</span>
+          <span class="eq-name">Profit</span>
+        </span>
+        <span class="eq-op" aria-hidden="true">÷</span>
+        <span class="visually-hidden">divided by</span>
+        <span class="eq-term">
+          <span class="eq-value" id="eq-mg-price">$100.00</span>
+          <span class="eq-name">the PRICE</span>
+        </span>
+        <span class="eq-op" aria-hidden="true">=</span>
+        <span class="visually-hidden">equals</span>
+        <span class="eq-term is-result">
+          <span class="eq-value" id="eq-mg-result">40.0%</span>
+          <span class="eq-name">Margin</span>
+        </span>
+      </div>
+
+      <p class="eq-note">
+        Identical profit on top. Only the figure underneath changes — and because
+        cost is the smaller of the two, markup always reports the bigger
+        percentage for the very same deal.
+      </p>
+
+      <p class="answer-implication" id="answer-implication">
+        Quote this deal as <strong>66.7% markup</strong> or <strong>40.0% margin</strong>
+        — identical money. Apply the wrong one and you'd price it at
+        <strong>$84.00</strong>.
+      </p>
+
+      <div class="answer-metrics">
+        <div class="metric">
+          <span class="metric-label">Markup on cost</span>
+          <span class="metric-value" id="metric-markup">66.7%</span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">Profit per unit</span>
+          <span class="metric-value" id="metric-profit">$40.00</span>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <section class="band">
+    <h2 class="band-label">Markup vs. margin chart</h2>
+    <figure class="viz">
+    <div class="viz-title">The same profit, measured two ways</div>
+
+    <div class="compare">
+      <div class="compare-row">
+        <div class="compare-head">
+          <span>Markup divides profit by <strong>cost</strong></span>
+          <span class="compare-result" id="cmp-markup-value">
+            {formatPercentValue(seed.data.markupPercent)}
+          </span>
+        </div>
+        <div class="compare-bar" aria-hidden="true">
+          <div class="compare-base" id="cmp-markup-cost" style={`width: ${split.costPercent}%`}>
+            <span id="cmp-markup-cost-text">Cost {formatCurrency(defaults.unitCost)}</span>
+          </div>
+          <div class="compare-profit" id="cmp-markup-profit" style={`width: ${split.contributionPercent}%`}>
+            <span id="cmp-markup-profit-text">Profit {formatCurrency(seed.data.profitPerUnit)}</span>
+          </div>
+        </div>
+        <div class="compare-denominator" id="cmp-denom-cost" style={`width: ${split.costPercent}%`} aria-hidden="true"></div>
+        <span class="compare-denominator-label" id="cmp-denom-cost-label">
+          divides by cost — {formatCurrency(defaults.unitCost)}
+        </span>
+      </div>
+
+      <div class="compare-row">
+        <div class="compare-head">
+          <span>Margin divides the same profit by <strong>price</strong></span>
+          <span class="compare-result" id="cmp-margin-value">
+            {formatPercentValue(seed.data.marginPercent)}
+          </span>
+        </div>
+        <div class="compare-bar" aria-hidden="true">
+          <div class="compare-base" id="cmp-margin-cost" style={`width: ${split.costPercent}%`}>
+            <span id="cmp-margin-cost-text">Cost {formatCurrency(defaults.unitCost)}</span>
+          </div>
+          <div class="compare-profit" id="cmp-margin-profit" style={`width: ${split.contributionPercent}%`}>
+            <span id="cmp-margin-profit-text">Profit {formatCurrency(seed.data.profitPerUnit)}</span>
+          </div>
+        </div>
+        <div class="compare-denominator" style="width: 100%" aria-hidden="true"></div>
+        <span class="compare-denominator-label" id="cmp-denom-price-label">
+          divides by price — {formatCurrency(defaults.sellingPrice)}
+        </span>
+      </div>
+    </div>
+
+    <figcaption id="viz-caption">
+      Identical bars, identical <strong>$40.00</strong> of profit. Only the grey rule
+      underneath changes — the shorter one (cost) gives the bigger percentage, which is
+      why markup always flatters the same deal.
+    </figcaption>
+    </figure>
+  </section>
+
+  <section class="band takeaways">
+    <h2 class="band-label">Markup vs. margin explained</h2>
+    <ul class="takeaway-list">
+      <li>
+        You keep <strong class="figure is-positive" id="take-margin">40.0%</strong> of every
+        dollar charged. Quoted as markup, the same deal is
+        <strong class="figure" id="take-markup">66.7%</strong>.
+      </li>
+      <li>
+        Markup always looks bigger than margin. Confusing them means underpricing —
+        pricing this item at a <strong class="figure" id="take-confused-pct">40.0%</strong>
+        markup instead would cost you
+        <strong class="figure is-negative" id="take-confused-loss">$16.00</strong> a unit.
+      </li>
+      <li>
+        Margin is the number to plan profit with; markup is the number most suppliers
+        quote. <strong class="figure">Check which one</strong> a quote means before you accept it.
+      </li>
+    </ul>
+  </section>
+
+  <section class="band">
+    <h2 class="band-label">Markup and margin formulas</h2>
+    <details class="show-math" open>
+    <summary><span class="chevron" aria-hidden="true"></span>Formula and worked example</summary>
+    <div class="show-math-body">
+      <code class="formula">markup % = (price − cost) ÷ cost × 100</code>
+      <code class="formula">margin % = (price − cost) ÷ price × 100</code>
+      <p>
+        Same numerator — your profit per unit — but a different denominator. That is the
+        entire reason the two percentages diverge, and why "add 30%" means two different
+        prices depending on which one was meant.
+      </p>
+
+      <h3>Worked example</h3>
+      <dl class="example-rows">
+        <div class="example-row"><dt>Cost</dt><dd>$60</dd></div>
+        <div class="example-row"><dt>Price</dt><dd>$100</dd></div>
+        <div class="example-row"><dt>Profit</dt><dd>$40</dd></div>
+        <div class="example-row is-result"><dt>Markup vs. margin</dt><dd>66.7% · 40%</dd></div>
+        <div class="example-row"><dt>If you'd used 40% as markup</dt><dd>$84 price — $16 lost</dd></div>
+      </dl>
+    </div>
+    </details>
+  </section>
+
+  <AdSlot
+    enabled={siteConfig.ads.enabled}
+    clientId={siteConfig.ads.clientId}
+    slotId={siteConfig.ads.inContentSlotId}
+    height="250px"
+  />
+
+  <section class="band">
+    <h2 class="band-label">Markup vs. margin FAQ</h2>
+    <FaqList faqs={faqs} />
+  </section>
+
+  <MoreTools hrefs={["/markup-margin-chart", "/selling-price", "/food-cost-calculator"]} />
+
+  <section class="band">
+    <div class="band-label">Next</div>
+    <NextStep
+    href="/selling-price"
+    title="Selling Price Calculator"
+    description="Work the other direction: pick the margin you want, get the price to charge."
+    />
+  </section>
+</Layout>
+
+<script>
+  import { calculateMarkupMargin } from "@repo/calculators/markup-margin";
+  import { formatCurrency, formatPercentValue, priceSplitLayout, readNumericField, wireCalculatorForm } from "@repo/ui";
+
+  const form = document.getElementById("calc-form") as HTMLFormElement;
+  const errorsEl = document.getElementById("form-errors") as HTMLUListElement;
+  const byId = (id: string) => document.getElementById(id)!;
+
+  const out = {
+    value: byId("answer-value"),
+    sentence: byId("answer-sentence"),
+    markup: byId("metric-markup"),
+    profit: byId("metric-profit"),
+    cmpMarkupValue: byId("cmp-markup-value"),
+    cmpMarginValue: byId("cmp-margin-value"),
+    cmpMarkupCost: byId("cmp-markup-cost"),
+    cmpMarkupCostText: byId("cmp-markup-cost-text"),
+    cmpMarkupProfit: byId("cmp-markup-profit"),
+    cmpMarkupProfitText: byId("cmp-markup-profit-text"),
+    cmpMarginCost: byId("cmp-margin-cost"),
+    cmpMarginCostText: byId("cmp-margin-cost-text"),
+    cmpMarginProfit: byId("cmp-margin-profit"),
+    cmpMarginProfitText: byId("cmp-margin-profit-text"),
+    cmpDenomCost: byId("cmp-denom-cost"),
+    cmpDenomCostLabel: byId("cmp-denom-cost-label"),
+    cmpDenomPriceLabel: byId("cmp-denom-price-label"),
+    takeMargin: byId("take-margin"),
+    takeMarkup: byId("take-markup"),
+    takeConfusedPct: byId("take-confused-pct"),
+    takeConfusedLoss: byId("take-confused-loss"),
+  };
+
+  const captionStrongs = byId("viz-caption").querySelectorAll("strong");
+  const implicationStrongs = byId("answer-implication").querySelectorAll("strong");
+  const value = (id: string) => readNumericField(id);
+
+  function readInputs() {
+    return { unitCost: value("unitCost"), sellingPrice: value("sellingPrice") };
+  }
+
+  wireCalculatorForm({
+    form,
+    errorsEl,
+    calculatorId: "markup-margin",
+    calculate: calculateMarkupMargin,
+    readInputs,
+    renderResult(data) {
+      const input = readInputs();
+      const split = priceSplitLayout(input.sellingPrice, input.unitCost);
+      const isLoss = data.profitPerUnit < 0;
+
+      // Two equations, one shared numerator: the whole point of this page.
+      byId("eq-mk-profit").textContent = formatCurrency(data.profitPerUnit);
+      byId("eq-mg-profit").textContent = formatCurrency(data.profitPerUnit);
+      byId("eq-mk-cost").textContent = formatCurrency(input.unitCost);
+      byId("eq-mg-price").textContent = formatCurrency(input.sellingPrice);
+      byId("eq-mk-result").textContent = formatPercentValue(data.markupPercent);
+      byId("eq-mg-result").textContent = formatPercentValue(data.marginPercent);
+      byId("eq-mk-result").parentElement!.classList.toggle("is-negative", isLoss);
+      byId("eq-mg-result").parentElement!.classList.toggle("is-negative", isLoss);
+
+      out.value.textContent = formatPercentValue(data.marginPercent);
+      out.value.classList.toggle("is-negative", isLoss);
+      out.value.classList.toggle("is-positive", !isLoss);
+
+      out.sentence.textContent = isLoss
+        ? `You're selling below cost — losing ${formatCurrency(
+            Math.abs(data.profitPerUnit)
+          )} on every unit.`
+        : `The same profit is a ${formatPercentValue(
+            data.markupPercent
+          )} markup on cost. Both describe ${formatCurrency(data.profitPerUnit)}.`;
+
+      out.markup.textContent = formatPercentValue(data.markupPercent);
+      out.profit.textContent = formatCurrency(data.profitPerUnit);
+      out.profit.classList.toggle("is-negative", isLoss);
+
+      // Both bars are identical; only the denominator rule beneath differs.
+      const costText = `Cost ${formatCurrency(input.unitCost)}`;
+      const profitText = isLoss ? "" : `Profit ${formatCurrency(data.profitPerUnit)}`;
+      for (const [bar, barText, profitBar, profitBarText] of [
+        [out.cmpMarkupCost, out.cmpMarkupCostText, out.cmpMarkupProfit, out.cmpMarkupProfitText],
+        [out.cmpMarginCost, out.cmpMarginCostText, out.cmpMarginProfit, out.cmpMarginProfitText],
+      ] as HTMLElement[][]) {
+        bar.style.width = `${split.costPercent}%`;
+        barText.textContent = costText;
+        profitBar.style.width = `${split.contributionPercent}%`;
+        profitBar.classList.toggle("is-loss", isLoss);
+        profitBarText.textContent = profitText;
+      }
+
+      out.cmpMarkupValue.textContent = formatPercentValue(data.markupPercent);
+      out.cmpMarkupValue.classList.toggle("is-negative", isLoss);
+      out.cmpMarginValue.textContent = formatPercentValue(data.marginPercent);
+      out.cmpMarginValue.classList.toggle("is-negative", isLoss);
+
+      out.cmpDenomCost.style.width = `${split.costPercent}%`;
+      out.cmpDenomCostLabel.textContent = `divides by cost — ${formatCurrency(input.unitCost)}`;
+      out.cmpDenomPriceLabel.textContent = `divides by price — ${formatCurrency(input.sellingPrice)}`;
+
+      captionStrongs[0].textContent = formatCurrency(data.profitPerUnit);
+
+      implicationStrongs[0].textContent = `${formatPercentValue(data.markupPercent)} markup`;
+      implicationStrongs[1].textContent = `${formatPercentValue(data.marginPercent)} margin`;
+      implicationStrongs[2].textContent = formatCurrency(
+        input.unitCost * (1 + data.marginPercent / 100)
+      );
+
+      // Takeaways
+      out.takeMargin.textContent = formatPercentValue(data.marginPercent);
+      out.takeMargin.classList.toggle("is-negative", isLoss);
+      out.takeMargin.classList.toggle("is-positive", !isLoss);
+      out.takeMarkup.textContent = formatPercentValue(data.markupPercent);
+
+      // What it costs to apply the margin figure as a markup by mistake.
+      const mistakenPrice = input.unitCost * (1 + data.marginPercent / 100);
+      out.takeConfusedPct.textContent = formatPercentValue(data.marginPercent);
+      out.takeConfusedLoss.textContent = formatCurrency(
+        Math.abs(input.sellingPrice - mistakenPrice)
+      );
+    },
+  });
+</script>

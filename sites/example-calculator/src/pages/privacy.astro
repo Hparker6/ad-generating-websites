@@ -1,0 +1,81 @@
+---
+import { buildMeta, hasPlaceholderContactEmail } from "@repo/seo";
+import Layout from "@repo/ui/components/Layout.astro";
+import { siteConfig } from "../../site.config.ts";
+
+const contactIsPlaceholder = hasPlaceholderContactEmail(siteConfig);
+
+const meta = buildMeta(siteConfig, {
+  title: "Privacy Policy",
+  description: `Privacy policy for ${siteConfig.siteName}.`,
+  path: "/privacy",
+});
+---
+
+<Layout config={siteConfig} meta={meta}>
+  <h1>Privacy Policy</h1>
+
+  <p>
+    <strong>
+      This is a placeholder privacy policy for development purposes only. It is
+      not legal advice and must be reviewed (ideally by a lawyer) and
+      customized before this site is launched publicly. See the checklist
+      below for what to verify.
+    </strong>
+  </p>
+
+  <h2>What this site collects</h2>
+  <p>
+    This calculator runs entirely in your browser. The values you enter are
+    never sent to a server or stored. If analytics are enabled for this site,
+    Google Analytics (GA4) collects standard, aggregated usage data (such as
+    page views and anonymized IP-derived location) and anonymous event data
+    about calculator usage (for example, that a calculation completed or
+    failed) — never the actual numbers you typed in.
+  </p>
+
+  <h2>Advertising</h2>
+  <p>
+    If this site displays ads, they may be served by a third-party ad
+    network (for example, Google AdSense), which can set cookies and use
+    data to personalize ads, as described in that network's own privacy
+    policy. Replace this paragraph with accurate details for whichever ad
+    network is actually in use before launch.
+  </p>
+
+  <h2>Contact</h2>
+  {
+    contactIsPlaceholder ? (
+      <p>
+        <strong>No contact address is set up yet.</strong> A real, monitored
+        address must be published here before launch.
+      </p>
+    ) : (
+      <p>Questions about this policy can be sent to {siteConfig.contactEmail}.</p>
+    )
+  }
+
+  <hr />
+
+  <h2>Before launch, you must review and update</h2>
+  <ul>
+    <li>Replace this placeholder text with a real, reviewed privacy policy.</li>
+    <li>Confirm the contact email above is real and monitored.</li>
+    <li>
+      Confirm what analytics/ads are actually enabled for this site and
+      describe them accurately (this text currently describes GA4 + a
+      generic ad network only).
+    </li>
+    <li>
+      Add a cookie-consent banner if required by the laws that apply to your
+      visitors (e.g. GDPR/UK-GDPR, ePrivacy, CCPA/CPRA) — this is especially
+      required once ads or non-essential analytics are enabled for EU/UK/CA
+      visitors.
+    </li>
+    <li>Confirm whether a terms-of-service page is also required.</li>
+    <li>
+      Verify compliance with the actual ad network's publisher policies
+      (e.g. Google AdSense program policies) before enabling ads.
+    </li>
+  </ul>
+</Layout>

@@ -1,0 +1,32 @@
+---
+import type { RelatedTool } from "../navigation.ts";
+
+interface Props {
+  tools: RelatedTool[];
+  heading?: string;
+  cue?: string;
+}
+
+const { tools, heading = "Related calculators", cue = "Open calculator" } = Astro.props;
+---
+
+{
+  tools.length > 0 && (
+    <section class="section">
+      <h2 class="section-title">{heading}</h2>
+      <ul class="tool-grid">
+        {tools.map((tool) => (
+          <li class="tool-card">
+            <h3>
+              <a href={tool.href}>{tool.title}</a>
+            </h3>
+            {tool.description && <p>{tool.description}</p>}
+            <span class="tool-cue" aria-hidden="true">
+              {cue}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}

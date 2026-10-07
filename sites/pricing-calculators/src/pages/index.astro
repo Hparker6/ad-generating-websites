@@ -1,0 +1,133 @@
+---
+import { buildMeta, buildOrganizationJsonLd, hasPlaceholderOrganization } from "@repo/seo";
+import Layout from "@repo/ui/components/Layout.astro";
+import { siteConfig } from "../../site.config";
+import { footerColumns, footerTagline, navItems } from "../site-nav";
+import { getTool, tools } from "../tools";
+
+const meta = buildMeta(siteConfig, {
+  title: "Free Pricing & Profit Calculators for Small Business",
+  description:
+    "Free small-business calculators: break-even point, markup vs. margin, selling price, discounts, price increases, food cost and freelance hourly rate — with the formula behind every answer.",
+  path: "/",
+});
+
+// Organization markup would publish an invented company name while the
+// config still holds the template placeholder, so it's omitted until a real
+// business name is set.
+const structuredData = hasPlaceholderOrganization(siteConfig)
+  ? []
+  : [buildOrganizationJsonLd(siteConfig)];
+
+const featured = {
+  ...getTool("/break-even"),
+  description:
+    "Three numbers you already know — fixed costs, price, cost per unit — and you get the volume where the business turns the corner.",
+};
+
+const coreTools = tools.filter((tool) => tool.group === "core" && tool.href !== featured.href);
+const pricingTools = tools.filter((tool) => tool.group === "pricing");
+---
+
+<Layout
+  config={siteConfig}
+  meta={meta}
+  structuredData={structuredData}
+  navItems={navItems}
+  footerColumns={footerColumns}
+  footerTagline={footerTagline}
+>
+  <div class="page-header">
+    <h1 class="page-title">Free Pricing &amp; Profit Calculators for Small Business</h1>
+    <p class="lede">
+      What should you charge, what is each sale really worth, and how much do you have to sell? Pick
+      the question you're trying to answer — every tool shows the formula behind its result.
+    </p>
+  </div>
+
+  <ol class="task-grid">
+    <li class="task-card is-featured">
+      <span class="task-num" aria-hidden="true">01</span>
+      <span class="task-featured-body">
+        <span class="start-badge">Start here</span>
+        <h2 class="task-question"><a href={featured.href}>{featured.question}</a></h2>
+        <p>{featured.description}</p>
+      </span>
+      <span class="task-tool" aria-hidden="true">{featured.navLabel}</span>
+    </li>
+
+    {
+      coreTools.map((tool, index) => (
+        <li class="task-card">
+          <span class="task-num" aria-hidden="true">{String(index + 2).padStart(2, "0")}</span>
+          <h2 class="task-question"><a href={tool.href}>{tool.question}</a></h2>
+          <p>{tool.summary}</p>
+          <span class="task-tool" aria-hidden="true">{tool.navLabel}</span>
+        </li>
+      ))
+    }
+  </ol>
+
+  <section class="section">
+    <h2 class="section-title">Pricing tools for specific decisions</h2>
+    <ol class="task-grid">
+      {
+        pricingTools.map((tool, index) => (
+          <li class="task-card">
+            <span class="task-num" aria-hidden="true">{String(index + coreTools.length + 2).padStart(2, "0")}</span>
+            <h3 class="task-question"><a href={tool.href}>{tool.question}</a></h3>
+            <p>{tool.summary}</p>
+            <span class="task-tool" aria-hidden="true">{tool.navLabel}</span>
+          </li>
+        ))
+      }
+    </ol>
+  </section>
+
+  <section class="section">
+    <h2 class="section-title">How the profit calculators fit together</h2>
+    <ol class="chain">
+      <li class="chain-step">
+        <span class="chain-num">1</span>
+        <span>
+          <a href="/contribution-margin">Contribution margin</a> tells you what one sale
+          is really worth after the cost of making it.
+        </span>
+      </li>
+      <li class="chain-step">
+        <span class="chain-num">2</span>
+        <span>
+          That figure drives <a href="/break-even">break-even</a> — how many sales it
+          takes to cover your fixed costs.
+        </span>
+      </li>
+      <li class="chain-step">
+        <span class="chain-num">3</span>
+        <span>
+          Push past zero with <a href="/target-profit">target profit</a> to find the
+          volume that actually pays you.
+        </span>
+      </li>
+      <li class="chain-step">
+        <span class="chain-num">4</span>
+        <span>
+          Working on the price itself?
+          <a href="/markup-vs-margin">Markup vs. margin</a> and
+          <a href="/selling-price">selling price</a> set the number those three depend on — and the
+          <a href="/discount-calculator">discount</a> and
+          <a href="/price-increase-calculator">price increase</a> calculators show what changing it does.
+        </span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="section">
+    <h2 class="section-title">How these work</h2>
+    <ul class="fact-list">
+      <li><strong>Nothing leaves your browser.</strong> No figure you type is sent, stored, or tracked.</li>
+      <li><strong>The math is shown.</strong> Every tool has the formula and a worked example on the page.</li>
+      <li><strong>Shareable results.</strong> Copy a link to any result and it reopens with the same figures filled in.</li>
+      <li><strong>Standard definitions.</strong> Ordinary cost accounting — not advice, and no substitute for an accountant.</li>
+    </ul>
+  </section>
+</Layout>

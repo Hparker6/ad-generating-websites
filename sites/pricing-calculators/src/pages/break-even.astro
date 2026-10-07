@@ -1,0 +1,505 @@
+---
+import { calculateBreakEven } from "@repo/calculators/break-even";
+import { buildMeta } from "@repo/seo";
+import {
+  DEFAULT_CHART_DIMENSIONS as DIM,
+  breakEvenChartGeometry,
+  formatCompactCurrency,
+  formatCompactNumber,
+} from "@repo/ui";
+import AdSlot from "@repo/ui/components/AdSlot.astro";
+import FaqList from "@repo/ui/components/FaqList.astro";
+import Layout from "@repo/ui/components/Layout.astro";
+import NextStep from "@repo/ui/components/NextStep.astro";
+import { siteConfig } from "../../site.config";
+import MoreTools from "../components/MoreTools.astro";
+import { footerColumns, footerTagline, navItems } from "../site-nav";
+import { formatUpdated, getTool, toolStructuredData } from "../tools";
+
+const tool = getTool("/break-even");
+
+const meta = buildMeta(siteConfig, {
+  title: "Break-Even Point Calculator (Units & Revenue)",
+  description:
+    "Find out how many units you need to sell to cover your costs. Enter fixed costs, price, and variable cost per unit.",
+  path: "/break-even",
+});
+
+// Rendered server-side from the same pure helpers the browser uses, so the
+// chart and numbers are correct before any JavaScript runs.
+const defaults = { fixedCosts: 10000, pricePerUnit: 50, variableCostPerUnit: 30 };
+const seed = calculateBreakEven(defaults);
+if (!seed.ok) throw new Error("Default break-even inputs must be valid");
+const geo = breakEvenChartGeometry({ ...defaults, breakEvenUnits: seed.data.breakEvenUnits });
+
+const presets = [
+  { label: "Small business", values: { fixedCosts: 10000, pricePerUnit: 50, variableCostPerUnit: 30 } },
+  { label: "Retail product", values: { fixedCosts: 4000, pricePerUnit: 25, variableCostPerUnit: 15 } },
+  { label: "Service business", values: { fixedCosts: 6000, pricePerUnit: 500, variableCostPerUnit: 150 } },
+];
+
+const faqs = [
+  {
+    question: "What is the break-even point?",
+    answer:
+      "The break-even point is the sales volume at which your total revenue exactly equals your total costs — fixed costs plus variable costs. Below it you're operating at a loss; above it, every additional unit contributes to profit.",
+  },
+  {
+    question: "What counts as a fixed cost vs. a variable cost?",
+    answer:
+      "Fixed costs don't change with how much you sell — rent, salaries, insurance, software subscriptions. Variable costs scale with each unit sold — materials, per-unit shipping, payment processing fees, sales commissions.",
+  },
+  {
+    question: "Why does the calculator reject some inputs?",
+    answer:
+      "If your variable cost per unit is equal to or greater than your selling price, you lose money (or break even) on every single sale. No sales volume can ever cover your fixed costs in that case, so the calculator flags it instead of showing a meaningless answer.",
+  },
+  {
+    question: "Why doesn't the break-even revenue equal my unit count times the price?",
+    answer:
+      "The unit count is rounded up to a whole unit, because you can't sell a fraction of one. Break-even revenue is calculated at the exact break-even point (fixed costs divided by the contribution margin ratio), so it can be slightly lower than rounded-up units multiplied by price.",
+  },
+  {
+    question: "Does this calculator store the numbers I enter?",
+    answer:
+      "No. Everything runs in your browser. Your costs and prices are never sent to a server or included in analytics.",
+  },
+];
+
+const structuredData = toolStructuredData(tool, meta.description);
+---
+
+<Layout
+  config={siteConfig}
+  meta={meta}
+  structuredData={structuredData}
+  navItems={navItems}
+  footerColumns={footerColumns}
+  footerTagline={footerTagline}
+>
+  <div class="page-header">
+    <h1 class="page-title">{tool.name}</h1>
+    <p class="lede">Your break-even point is fixed costs ÷ (price − variable cost per unit). Enter those three numbers to see how many units — and how much revenue — it takes to stop losing money.</p>
+    <p class="page-meta">Updated <time datetime={tool.updated}>{formatUpdated(tool.updated)}</time> · Standard cost-accounting formulas, shown in full below.</p>
+  </div>
+
+  <div class="calc-grid">
+    <form id="calc-form" class="panel" novalidate>
+      <div class="preset-row">
+        <span class="preset-label">Try an example</span>
+        {
+          presets.map((preset, index) => (
+            <button
+              type="button"
+              class="preset"
+              data-preset={JSON.stringify(preset.values)}
+              aria-pressed={index === 0 ? "true" : "false"}
+            >
+              {preset.label}
+            </button>
+          ))
+        }
+      </div>
+
+      <div class="field-stack">
+        <div class="field">
+          <label for="fixedCosts">Fixed costs</label>
+          <div class="input-row">
+            <button type="button" class="stepper" data-step-for="fixedCosts" data-step-delta="-500" aria-label="Decrease fixed costs by 500">−</button>
+            <div class="input-affix">
+              <span class="affix affix-start" aria-hidden="true">$</span>
+              <input type="number" id="fixedCosts" name="fixedCosts" min="0" max="100000000" step="100" value="10000" inputmode="decimal" aria-describedby="fixedCosts-hint" />
+            </div>
+            <button type="button" class="stepper" data-step-for="fixedCosts" data-step-delta="500" aria-label="Increase fixed costs by 500">+</button>
+          </div>
+          <span class="field-hint" id="fixedCosts-hint">Rent, salaries, software — per period.</span>
+        </div>
+
+        <div class="field">
+          <label for="pricePerUnit">Price per unit</label>
+          <div class="input-row">
+            <button type="button" class="stepper" data-step-for="pricePerUnit" data-step-delta="-1" aria-label="Decrease price by 1">−</button>
+            <div class="input-affix">
+              <span class="affix affix-start" aria-hidden="true">$</span>
+              <input type="number" id="pricePerUnit" name="pricePerUnit" min="0.01" max="1000000" step="0.01" value="50" inputmode="decimal" />
+            </div>
+            <button type="button" class="stepper" data-step-for="pricePerUnit" data-step-delta="1" aria-label="Increase price by 1">+</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="variableCostPerUnit">Cost per unit</label>
+          <div class="input-row">
+            <button type="button" class="stepper" data-step-for="variableCostPerUnit" data-step-delta="-1" aria-label="Decrease cost per unit by 1">−</button>
+            <div class="input-affix">
+              <span class="affix affix-start" aria-hidden="true">$</span>
+              <input type="number" id="variableCostPerUnit" name="variableCostPerUnit" min="0" max="1000000" step="0.01" value="30" inputmode="decimal" aria-describedby="variableCost-hint" />
+            </div>
+            <button type="button" class="stepper" data-step-for="variableCostPerUnit" data-step-delta="1" aria-label="Increase cost per unit by 1">+</button>
+          </div>
+          <span class="field-hint" id="variableCost-hint">What each sale costs you — materials, shipping, fees.</span>
+        </div>
+      </div>
+
+      <ul id="form-errors" class="error-list" aria-live="polite"></ul>
+
+      <button type="button" class="copy-link" data-copy-link aria-live="polite">Copy link to this result</button>
+    </form>
+
+    <section class="answer" aria-label="Result" aria-live="polite">
+      <div class="answer-head">
+        <span class="answer-label">Break-even volume</span>
+        <strong class="answer-value" id="answer-value">500</strong>
+        <p class="answer-sentence" id="answer-sentence">
+          units per period covers all your costs. Sell more and you're profitable.
+        </p>
+      </div>
+      <div class="equation" data-label="Why">
+        <span class="eq-term">
+          <span class="eq-value" id="eq-fixed">$10,000</span>
+          <span class="eq-name">Fixed costs</span>
+        </span>
+        <span class="eq-op" aria-hidden="true">÷</span>
+        <span class="visually-hidden">divided by</span>
+        <span class="eq-term">
+          <span class="eq-value" id="eq-cm">$20.00</span>
+          <span class="eq-name">Kept per unit</span>
+        </span>
+        <span class="eq-op" aria-hidden="true">=</span>
+        <span class="visually-hidden">equals</span>
+        <span class="eq-term is-result">
+          <span class="eq-value" id="eq-units">500</span>
+          <span class="eq-name">Units to break even</span>
+        </span>
+      </div>
+
+        <p class="answer-implication" id="answer-implication">
+          If those are monthly costs, that's about <strong>115 units a week</strong>.
+          Every extra <strong>$1,000</strong> of fixed cost adds <strong>50 units</strong>
+          to the target.
+        </p>
+
+      <div class="answer-metrics">
+        <div class="metric">
+          <span class="metric-label">Sales needed</span>
+          <span class="metric-value" id="metric-revenue">$25,000.00</span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">Profit per extra unit</span>
+          <span class="metric-value" id="metric-cm">$20.00</span>
+        </div>
+      </div>
+      <div class="scenarios">
+        <h2>If something changed</h2>
+        <ul class="scenario-list">
+          <li>
+            <span id="scenario-price-label">Price up 10% to $55.00</span>
+            <span class="scenario-value" id="scenario-price">400 units</span>
+          </li>
+          <li>
+            <span id="scenario-cost-label">Unit cost down 10% to $27.00</span>
+            <span class="scenario-value" id="scenario-cost">435 units</span>
+          </li>
+        </ul>
+      </div>
+    </section>
+  </div>
+
+  <section class="band">
+    <h2 class="band-label">Break-even chart</h2>
+    <figure class="viz">
+    <div class="viz-title">Revenue vs. total costs</div>
+    <svg viewBox={`0 0 ${DIM.width} ${DIM.height}`} aria-hidden="true">
+      <polygon id="chart-loss" class="chart-loss-zone" points={`${geo.plot.left},${geo.plot.bottom} ${geo.plot.left},${geo.cost.from.y} ${geo.intersection.x},${geo.intersection.y}`} />
+      <polygon id="chart-profit" class="chart-profit-zone" points={`${geo.intersection.x},${geo.intersection.y} ${geo.plot.right},${geo.cost.to.y} ${geo.plot.right},${geo.revenue.to.y}`} />
+
+      <line class="chart-axis" x1={geo.plot.left} y1={geo.plot.top} x2={geo.plot.left} y2={geo.plot.bottom} />
+      <line class="chart-axis" x1={geo.plot.left} y1={geo.plot.bottom} x2={geo.plot.right} y2={geo.plot.bottom} />
+
+      <line id="chart-cost" class="chart-line-cost" x1={geo.cost.from.x} y1={geo.cost.from.y} x2={geo.cost.to.x} y2={geo.cost.to.y} />
+      <line id="chart-revenue" class="chart-line-revenue" x1={geo.revenue.from.x} y1={geo.revenue.from.y} x2={geo.revenue.to.x} y2={geo.revenue.to.y} />
+
+      <text id="chart-revenue-label" class="chart-label-line is-revenue" x={geo.revenue.to.x + 10} y={geo.revenue.to.y + 4}>Revenue</text>
+      <text id="chart-cost-label" class="chart-label-line is-cost" x={geo.cost.to.x + 10} y={geo.cost.to.y + 4}>Total costs</text>
+
+      <text
+        id="chart-loss-label"
+        class="chart-region-label is-loss"
+        x={(geo.plot.left * 2 + geo.intersection.x) / 3}
+        y={(geo.plot.bottom + geo.cost.from.y + geo.intersection.y) / 3}
+        text-anchor="middle"
+      >Loss</text>
+      <text
+        id="chart-profit-label"
+        class="chart-region-label is-profit"
+        x={(geo.intersection.x + geo.plot.right * 2) / 3}
+        y={(geo.intersection.y + geo.cost.to.y + geo.revenue.to.y) / 3}
+        text-anchor="middle"
+      >Profit</text>
+
+      <line id="chart-marker-line" class="chart-marker-line" x1={geo.intersection.x} y1={geo.intersection.y} x2={geo.intersection.x} y2={geo.plot.bottom} />
+      <circle id="chart-marker" class="chart-marker" cx={geo.intersection.x} cy={geo.intersection.y} r="7" />
+      <text id="chart-point-label" class="chart-label-point" x={geo.intersection.x} y={geo.intersection.y - 20} text-anchor="middle">
+        Break even · 500 units
+      </text>
+
+      <text id="chart-y-max" class="chart-label-axis" x={geo.plot.left - 8} y={geo.plot.top + 4} text-anchor="end">{formatCompactCurrency(geo.yMaxDollars)}</text>
+      <text class="chart-label-axis" x={geo.plot.left - 8} y={geo.plot.bottom} text-anchor="end">$0</text>
+      <text id="chart-x-max" class="chart-label-axis" x={geo.plot.right} y={geo.plot.bottom + 20} text-anchor="end">{formatCompactNumber(Math.ceil(geo.xMaxUnits))} units</text>
+      <text class="chart-label-axis" x={geo.plot.left} y={geo.plot.bottom + 20} text-anchor="start">0 units</text>
+    </svg>
+
+    <figcaption id="chart-caption">
+      The lines cross at <strong>500 units</strong>. Everything to the left of that
+      is a loss; everything to the right is profit at <strong>$20.00</strong> a unit.
+    </figcaption>
+    </figure>
+  </section>
+
+  <section class="band takeaways">
+    <h2 class="band-label">Break-even analysis</h2>
+    <ul class="takeaway-list">
+      <li>
+        You need <strong class="figure is-positive" id="take-units">500 units</strong>
+        — about <strong class="figure" id="take-revenue">$25,000</strong> in sales — before
+        this period turns a profit.
+      </li>
+      <li>
+        Each sale keeps <strong class="figure" id="take-cm">$20.00</strong> after the cost
+        of making it, which is <strong class="figure" id="take-ratio">40.0%</strong> of the price.
+      </li>
+      <li>
+        Break-even moves when your price or unit cost changes, not when volume does —
+        charging <strong class="figure" id="take-lever">$5.00</strong> more per unit would
+        bring it down to <strong class="figure is-positive" id="take-lever-units">400 units</strong>.
+      </li>
+    </ul>
+  </section>
+
+  <section class="band">
+    <h2 class="band-label">Break-even formula</h2>
+    <details class="show-math" open>
+    <summary><span class="chevron" aria-hidden="true"></span>Formula and worked example</summary>
+    <div class="show-math-body">
+      <p>
+        Your <strong>contribution margin</strong> is what's left from each sale after
+        the variable cost of producing it. That margin is what pays down fixed costs.
+      </p>
+      <code class="formula">contribution margin = price − variable cost per unit</code>
+      <code class="formula">break-even units = fixed costs ÷ contribution margin</code>
+      <p>
+        Break-even revenue is measured at that exact point — equivalently, fixed costs
+        divided by the contribution margin ratio. The unit count shown is rounded up to
+        a whole unit, so multiplying it by your price can land slightly above the
+        revenue figure.
+      </p>
+
+      <h3>Worked example</h3>
+      <dl class="example-rows">
+        <div class="example-row"><dt>Fixed costs (per month)</dt><dd>$10,000</dd></div>
+        <div class="example-row"><dt>Price per unit</dt><dd>$50</dd></div>
+        <div class="example-row"><dt>Variable cost per unit</dt><dd>$30</dd></div>
+        <div class="example-row"><dt>Contribution margin</dt><dd>$50 − $30 = $20</dd></div>
+        <div class="example-row is-result"><dt>Break-even</dt><dd>500 units · $25,000</dd></div>
+      </dl>
+    </div>
+    </details>
+  </section>
+
+  <AdSlot
+    enabled={siteConfig.ads.enabled}
+    clientId={siteConfig.ads.clientId}
+    slotId={siteConfig.ads.inContentSlotId}
+    height="250px"
+  />
+
+  <section class="band">
+    <h2 class="band-label">Break-even FAQ</h2>
+    <FaqList faqs={faqs} />
+  </section>
+
+  <MoreTools hrefs={["/contribution-margin", "/price-increase-calculator", "/food-cost-calculator"]} />
+
+  <section class="band">
+    <div class="band-label">Next</div>
+    <NextStep
+    href="/target-profit"
+    title="Target Profit Calculator"
+    description="Break-even is zero profit. Find the volume that actually pays you."
+    />
+  </section>
+</Layout>
+
+<script>
+  import { calculateBreakEven } from "@repo/calculators/break-even";
+  import {
+    breakEvenChartGeometry,
+    formatCompactCurrency,
+    formatCompactNumber,
+    formatCurrency,
+    formatNumber,
+    formatPercent,
+    readNumericField,
+    wireCalculatorForm,
+  } from "@repo/ui";
+
+  const form = document.getElementById("calc-form") as HTMLFormElement;
+  const errorsEl = document.getElementById("form-errors") as HTMLUListElement;
+  const byId = (id: string) => document.getElementById(id)!;
+
+  const out = {
+    value: byId("answer-value"),
+    sentence: byId("answer-sentence"),
+    revenue: byId("metric-revenue"),
+    cm: byId("metric-cm"),
+    takeUnits: byId("take-units"),
+    takeRevenue: byId("take-revenue"),
+    takeCm: byId("take-cm"),
+    takeRatio: byId("take-ratio"),
+    takeLever: byId("take-lever"),
+    takeLeverUnits: byId("take-lever-units"),
+    caption: byId("chart-caption"),
+    captionUnits: null as HTMLElement | null,
+    loss: byId("chart-loss"),
+    profit: byId("chart-profit"),
+    cost: byId("chart-cost"),
+    revenueLine: byId("chart-revenue"),
+    revenueLabel: byId("chart-revenue-label"),
+    costLabel: byId("chart-cost-label"),
+    markerLine: byId("chart-marker-line"),
+    marker: byId("chart-marker"),
+    pointLabel: byId("chart-point-label"),
+    yMax: byId("chart-y-max"),
+    xMax: byId("chart-x-max"),
+    lossLabel: byId("chart-loss-label"),
+    profitLabel: byId("chart-profit-label"),
+    implication: byId("answer-implication"),
+    scenarioPriceLabel: byId("scenario-price-label"),
+    scenarioPrice: byId("scenario-price"),
+    scenarioCostLabel: byId("scenario-cost-label"),
+    scenarioCost: byId("scenario-cost"),
+    eqFixed: byId("eq-fixed"),
+    eqCm: byId("eq-cm"),
+    eqUnits: byId("eq-units"),
+  };
+
+  const implicationStrongs = byId("answer-implication").querySelectorAll("strong");
+
+  // The caption keeps its two <strong> slots so updates never touch innerHTML.
+  const captionStrongs = out.caption.querySelectorAll("strong");
+
+  function readInputs() {
+    return {
+      fixedCosts: readNumericField("fixedCosts"),
+      pricePerUnit: readNumericField("pricePerUnit"),
+      variableCostPerUnit: readNumericField("variableCostPerUnit"),
+    };
+  }
+
+  function setAttrs(target: Element, attrs: Record<string, string | number>) {
+    for (const [name, value] of Object.entries(attrs)) target.setAttribute(name, String(value));
+  }
+
+  wireCalculatorForm({
+    form,
+    errorsEl,
+    calculatorId: "break-even",
+    calculate: calculateBreakEven,
+    readInputs,
+    renderResult(data) {
+      const input = readInputs();
+      const units = Math.ceil(data.breakEvenUnits);
+      const unitsText = formatNumber(units);
+
+      out.value.textContent = unitsText;
+      out.sentence.textContent =
+        "units per period covers all your costs. Sell more and you're profitable.";
+      out.revenue.textContent = formatCurrency(data.breakEvenRevenue);
+      out.cm.textContent = formatCurrency(data.contributionMarginPerUnit);
+
+      // The equation restates the answer as the arithmetic that produced it,
+      // using the same values rendered everywhere else on the page.
+      out.eqFixed.textContent = Number.isInteger(input.fixedCosts)
+        ? `$${formatNumber(input.fixedCosts)}`
+        : formatCurrency(input.fixedCosts);
+      out.eqCm.textContent = formatCurrency(data.contributionMarginPerUnit);
+      out.eqUnits.textContent = unitsText;
+
+      // Takeaways
+      out.takeUnits.textContent = `${unitsText} units`;
+      out.takeRevenue.textContent = formatCompactCurrency(data.breakEvenRevenue);
+      out.takeCm.textContent = formatCurrency(data.contributionMarginPerUnit);
+      out.takeRatio.textContent = formatPercent(data.contributionMarginRatio);
+
+      // A concrete lever: what one more dollar of margin per unit would do.
+      const bump = Math.max(1, Math.round(input.pricePerUnit * 0.1));
+      const improved = calculateBreakEven({ ...input, pricePerUnit: input.pricePerUnit + bump });
+      out.takeLever.textContent = formatCurrency(bump);
+      out.takeLeverUnits.textContent = improved.ok
+        ? `${formatNumber(Math.ceil(improved.data.breakEvenUnits))} units`
+        : "—";
+
+      // Practical implication: the weekly pace, and the cost of extra overhead.
+      implicationStrongs[0].textContent = `${formatNumber(Math.ceil(units / 4.33))} units a week`;
+      implicationStrongs[2].textContent = `${formatNumber(
+        Math.ceil(1000 / data.contributionMarginPerUnit)
+      )} units`;
+
+      // Scenarios: the same question under one changed assumption.
+      const higherPrice = input.pricePerUnit * 1.1;
+      const lowerCost = input.variableCostPerUnit * 0.9;
+      const priceScenario = calculateBreakEven({ ...input, pricePerUnit: higherPrice });
+      const costScenario = calculateBreakEven({ ...input, variableCostPerUnit: lowerCost });
+
+      out.scenarioPriceLabel.textContent = `Price up 10% to ${formatCurrency(higherPrice)}`;
+      out.scenarioPrice.textContent = priceScenario.ok
+        ? `${formatNumber(Math.ceil(priceScenario.data.breakEvenUnits))} units`
+        : "—";
+      out.scenarioCostLabel.textContent = `Unit cost down 10% to ${formatCurrency(lowerCost)}`;
+      out.scenarioCost.textContent = costScenario.ok
+        ? `${formatNumber(Math.ceil(costScenario.data.breakEvenUnits))} units`
+        : "—";
+
+      // Chart
+      const geo = breakEvenChartGeometry({ ...input, breakEvenUnits: data.breakEvenUnits });
+      setAttrs(out.loss, {
+        points: `${geo.plot.left},${geo.plot.bottom} ${geo.plot.left},${geo.cost.from.y} ${geo.intersection.x},${geo.intersection.y}`,
+      });
+      setAttrs(out.profit, {
+        points: `${geo.intersection.x},${geo.intersection.y} ${geo.plot.right},${geo.cost.to.y} ${geo.plot.right},${geo.revenue.to.y}`,
+      });
+      setAttrs(out.cost, { x1: geo.cost.from.x, y1: geo.cost.from.y, x2: geo.cost.to.x, y2: geo.cost.to.y });
+      setAttrs(out.revenueLine, {
+        x1: geo.revenue.from.x,
+        y1: geo.revenue.from.y,
+        x2: geo.revenue.to.x,
+        y2: geo.revenue.to.y,
+      });
+      setAttrs(out.revenueLabel, { x: geo.revenue.to.x + 10, y: geo.revenue.to.y + 4 });
+      setAttrs(out.costLabel, { x: geo.cost.to.x + 10, y: geo.cost.to.y + 4 });
+      setAttrs(out.markerLine, {
+        x1: geo.intersection.x,
+        y1: geo.intersection.y,
+        x2: geo.intersection.x,
+        y2: geo.plot.bottom,
+      });
+      setAttrs(out.marker, { cx: geo.intersection.x, cy: geo.intersection.y });
+      setAttrs(out.pointLabel, { x: geo.intersection.x, y: geo.intersection.y - 20 });
+      setAttrs(out.lossLabel, {
+        x: (geo.plot.left * 2 + geo.intersection.x) / 3,
+        y: (geo.plot.bottom + geo.cost.from.y + geo.intersection.y) / 3,
+      });
+      setAttrs(out.profitLabel, {
+        x: (geo.intersection.x + geo.plot.right * 2) / 3,
+        y: (geo.intersection.y + geo.cost.to.y + geo.revenue.to.y) / 3,
+      });
+
+      out.pointLabel.textContent = `Break even · ${unitsText} units`;
+      out.yMax.textContent = formatCompactCurrency(geo.yMaxDollars);
+      out.xMax.textContent = `${formatCompactNumber(Math.ceil(geo.xMaxUnits))} units`;
+
+      captionStrongs[0].textContent = `${unitsText} units`;
+      captionStrongs[1].textContent = formatCurrency(data.contributionMarginPerUnit);
+    },
+  });
+</script>

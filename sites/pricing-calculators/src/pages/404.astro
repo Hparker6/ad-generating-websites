@@ -1,0 +1,42 @@
+---
+import { buildMeta } from "@repo/seo";
+import Layout from "@repo/ui/components/Layout.astro";
+import RelatedTools from "@repo/ui/components/RelatedTools.astro";
+import { siteConfig } from "../../site.config";
+import { footerColumns, footerTagline, navItems } from "../site-nav";
+
+const meta = buildMeta(siteConfig, {
+  title: "Page not found",
+  description: "The page you're looking for doesn't exist.",
+  path: "/404",
+  noindex: true,
+});
+---
+
+<Layout
+  config={siteConfig}
+  meta={meta}
+  navItems={navItems}
+  footerColumns={footerColumns}
+  footerTagline={footerTagline}
+>
+  <div class="page-header">
+    <span class="eyebrow">404</span>
+    <h1 class="page-title">Page not found</h1>
+    <p class="lede">
+      That page doesn't exist. Here are the calculators you were probably
+      looking for.
+    </p>
+  </div>
+
+  <RelatedTools
+    heading="All calculators"
+    tools={[
+      { title: "Break-Even Calculator", href: "/break-even", description: "Units needed to cover your costs." },
+      { title: "Target Profit Calculator", href: "/target-profit", description: "Units needed to hit a profit goal." },
+      { title: "Contribution Margin Calculator", href: "/contribution-margin", description: "What each sale contributes." },
+      { title: "Markup vs. Margin Calculator", href: "/markup-vs-margin", description: "Both percentages, side by side." },
+      { title: "Selling Price Calculator", href: "/selling-price", description: "The price for a target margin." },
+    ]}
+  />
+</Layout>

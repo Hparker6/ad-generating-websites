@@ -1,0 +1,40 @@
+---
+import { isAnalyticsEnabled, type SiteConfig } from "@repo/seo";
+
+interface Props {
+  config: SiteConfig;
+}
+
+const { config } = Astro.props;
+const enabled = isAnalyticsEnabled(config);
+const measurementId = config.analytics.ga4MeasurementId;
+---
+
+{
+  enabled && (
+    <Fragment>
+      <script
+        async
+        src={`https://www.googletagmanager.com/gtag/js?id=${measurementId}`}
+      />
+      <script define:vars={{ measurementId }}>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() {
+          dataLayer.push(arguments);
+        }
+        window.gtag = gtag;
+        gtag("js", new Date());
+        // anonymize_ip retained for user privacy; no PII or user-entered
+        // values are ever sent (see trackEvent in packages/ui/src/analytics.ts).
+        // Calculator links can carry inputs in the query string, so the page
+        // location reported to GA4 keeps only campaign parameters.
+        var pageUrl = new URL(window.location.href);
+        var reportedUrl = new URL(pageUrl.pathname, pageUrl.origin);
+        pageUrl.searchParams.forEach(function (value, key) {
+          if (/^utm_/.test(key) || key === "gclid") reportedUrl.searchParams.set(key, value);
+        });
+        gtag("config", measurementId, { anonymize_ip: true, page_location: reportedUrl.toString() });
+      </script>
+    </Fragment>
+  )
+}

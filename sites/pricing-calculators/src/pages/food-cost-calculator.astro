@@ -1,0 +1,297 @@
+---
+import { calculateFoodCost } from "@repo/calculators/food-cost";
+import { buildMeta } from "@repo/seo";
+import { formatCurrency, formatPercentValue } from "@repo/ui";
+import AdSlot from "@repo/ui/components/AdSlot.astro";
+import FaqList from "@repo/ui/components/FaqList.astro";
+import Layout from "@repo/ui/components/Layout.astro";
+import NextStep from "@repo/ui/components/NextStep.astro";
+import { siteConfig } from "../../site.config";
+import MoreTools from "../components/MoreTools.astro";
+import { footerColumns, footerTagline, navItems } from "../site-nav";
+import { formatUpdated, getTool, toolStructuredData } from "../tools";
+
+const tool = getTool("/food-cost-calculator");
+
+const meta = buildMeta(siteConfig, {
+  title: "Food Cost Calculator & Menu Price Calculator",
+  description:
+    "Free restaurant food cost calculator: enter a dish's ingredient cost and target food cost percentage to get the menu price, gross profit per plate, and markup.",
+  path: tool.href,
+});
+
+const defaults = { plateCost: 4.5, targetFoodCostPercent: 30 };
+
+function priceAt(percent: number) {
+  const result = calculateFoodCost({ plateCost: defaults.plateCost, targetFoodCostPercent: percent });
+  if (!result.ok) throw new Error("Default food-cost inputs must be valid");
+  return result.data;
+}
+
+const seed = priceAt(defaults.targetFoodCostPercent);
+const scenarioPercents = [25, 28, 35];
+
+const presets = [
+  { label: "Burger", values: { plateCost: 3.8, targetFoodCostPercent: 30 } },
+  { label: "Pasta dish", values: { plateCost: 2.6, targetFoodCostPercent: 25 } },
+  { label: "Steak entrée", values: { plateCost: 11.5, targetFoodCostPercent: 35 } },
+];
+
+const faqs = [
+  {
+    question: "How do I calculate food cost percentage?",
+    answer:
+      "Divide the cost of a dish's ingredients by its menu price and multiply by 100. A plate that costs $4.50 to make and sells for $15.00 has a food cost of 30%.",
+  },
+  {
+    question: "How do I set a menu price from food cost?",
+    answer:
+      "Divide the plate cost by your target food cost percentage written as a decimal. For a $4.50 plate and a 30% target, that's $4.50 ÷ 0.30 = $15.00.",
+  },
+  {
+    question: "What's a good food cost percentage?",
+    answer:
+      "Many restaurants aim for roughly 28–35% across the menu, but it varies widely by concept. Items with cheap ingredients, like pasta or drinks, often run lower, while steak and seafood often run higher. What matters is the blended figure across everything you sell.",
+  },
+  {
+    question: "What should plate cost include?",
+    answer:
+      "The cost of every ingredient in the portion as served — including garnishes, sauces, oil, and sides — at the price you actually pay. It doesn't include labor, rent, or other overhead; those are paid out of the gross profit the calculator shows.",
+  },
+  {
+    question: "Is food cost percentage the same as margin?",
+    answer:
+      "It's the other side of it. A 30% food cost means 70% of the menu price is gross margin before labor and overhead. The equivalent markup on ingredient cost is much higher — about 233% in this example.",
+  },
+];
+
+const structuredData = toolStructuredData(tool, meta.description);
+---
+
+<Layout
+  config={siteConfig}
+  meta={meta}
+  structuredData={structuredData}
+  navItems={navItems}
+  footerColumns={footerColumns}
+  footerTagline={footerTagline}
+>
+  <div class="page-header">
+    <h1 class="page-title">{tool.name}</h1>
+    <p class="lede">
+      Menu price = plate cost ÷ target food cost %. A dish that costs $4.50 to make needs a $15.00 menu
+      price to run at a 30% food cost. Enter your plate cost and target to price any dish.
+    </p>
+    <p class="page-meta">Updated <time datetime={tool.updated}>{formatUpdated(tool.updated)}</time> · Standard food-cost formulas, shown in full below.</p>
+  </div>
+
+  <div class="calc-grid">
+    <form id="calc-form" class="panel" novalidate>
+      <div class="preset-row">
+        <span class="preset-label">Try an example</span>
+        {
+          presets.map((preset) => (
+            <button type="button" class="preset" data-preset={JSON.stringify(preset.values)} aria-pressed="false">
+              {preset.label}
+            </button>
+          ))
+        }
+      </div>
+
+      <div class="field-stack">
+        <div class="field">
+          <label for="plateCost">Plate cost (ingredients)</label>
+          <div class="input-row">
+            <button type="button" class="stepper" data-step-for="plateCost" data-step-delta="-0.25" aria-label="Decrease plate cost by 25 cents">−</button>
+            <div class="input-affix">
+              <span class="affix affix-start" aria-hidden="true">$</span>
+              <input type="number" id="plateCost" name="plateCost" min="0.01" max="100000" step="0.01" value={defaults.plateCost} inputmode="decimal" aria-describedby="plateCost-hint" />
+            </div>
+            <button type="button" class="stepper" data-step-for="plateCost" data-step-delta="0.25" aria-label="Increase plate cost by 25 cents">+</button>
+          </div>
+          <span class="field-hint" id="plateCost-hint">Every ingredient in the portion as served, including sides and sauces.</span>
+        </div>
+
+        <div class="field">
+          <label for="targetFoodCostPercent">Target food cost</label>
+          <div class="input-row">
+            <button type="button" class="stepper" data-step-for="targetFoodCostPercent" data-step-delta="-1" aria-label="Decrease target food cost by 1 percent">−</button>
+            <div class="input-affix">
+              <span class="affix affix-end" aria-hidden="true">%</span>
+              <input type="number" id="targetFoodCostPercent" name="targetFoodCostPercent" min="1" max="100" step="1" value={defaults.targetFoodCostPercent} inputmode="decimal" />
+            </div>
+            <button type="button" class="stepper" data-step-for="targetFoodCostPercent" data-step-delta="1" aria-label="Increase target food cost by 1 percent">+</button>
+          </div>
+          <input type="range" id="foodCostSlider" min="15" max="50" step="1" value={defaults.targetFoodCostPercent} data-sync-with="targetFoodCostPercent" aria-label="Target food cost slider" />
+          <div class="range-scale" aria-hidden="true">
+            <span>15%</span>
+            <span>30%</span>
+            <span>50%</span>
+          </div>
+        </div>
+      </div>
+
+      <ul id="form-errors" class="error-list" aria-live="polite"></ul>
+
+      <button type="button" class="copy-link" data-copy-link aria-live="polite">Copy link to this result</button>
+    </form>
+
+    <section class="answer" aria-label="Result" aria-live="polite">
+      <div class="answer-head">
+        <span class="answer-label">Menu price</span>
+        <strong class="answer-value" id="answer-value">{formatCurrency(seed.menuPrice)}</strong>
+        <p class="answer-sentence" id="answer-sentence">
+          keeps ingredients at {formatPercentValue(defaults.targetFoodCostPercent)} of what the guest pays.
+        </p>
+      </div>
+
+      <div class="equation" data-label="Why">
+        <span class="eq-term">
+          <span class="eq-value" id="eq-cost">{formatCurrency(defaults.plateCost)}</span>
+          <span class="eq-name">Plate cost</span>
+        </span>
+        <span class="eq-op" aria-hidden="true">÷</span>
+        <span class="visually-hidden">divided by</span>
+        <span class="eq-term">
+          <span class="eq-value" id="eq-divisor">{(defaults.targetFoodCostPercent / 100).toFixed(2)}</span>
+          <span class="eq-name">Food cost %</span>
+        </span>
+        <span class="eq-op" aria-hidden="true">=</span>
+        <span class="visually-hidden">equals</span>
+        <span class="eq-term is-result">
+          <span class="eq-value" id="eq-price">{formatCurrency(seed.menuPrice)}</span>
+          <span class="eq-name">Menu price</span>
+        </span>
+      </div>
+
+      <div class="answer-metrics">
+        <div class="metric">
+          <span class="metric-label">Gross profit per plate</span>
+          <span class="metric-value" id="metric-profit">{formatCurrency(seed.grossProfitPerPlate)}</span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">Markup on ingredients</span>
+          <span class="metric-value" id="metric-markup">{formatPercentValue(seed.equivalentMarkupPercent)}</span>
+        </div>
+      </div>
+
+      <div class="scenarios">
+        <h2>At other food cost targets</h2>
+        <ul class="scenario-list">
+          {
+            scenarioPercents.map((percent, index) => (
+              <li>
+                <span>{percent}% food cost</span>
+                <span class="scenario-value" id={`scenario-${index}`}>{formatCurrency(priceAt(percent).menuPrice)}</span>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </section>
+  </div>
+
+  <section class="band takeaways">
+    <h2 class="band-label">What this price means</h2>
+    <ul class="takeaway-list">
+      <li>
+        Each plate leaves <strong class="figure is-positive" id="take-profit">{formatCurrency(seed.grossProfitPerPlate)}</strong>
+        to pay for labor, rent, and everything else before profit.
+      </li>
+      <li>
+        Simply doubling ingredient cost would price this at
+        <strong class="figure" id="take-double">{formatCurrency(defaults.plateCost * 2)}</strong> — a
+        <strong class="figure is-negative">50.0%</strong> food cost.
+      </li>
+      <li>
+        Ingredient prices move. Re-cost your top sellers whenever a supplier changes prices, and check
+        the result here.
+      </li>
+    </ul>
+  </section>
+
+  <section class="band">
+    <h2 class="band-label">Food cost formula</h2>
+    <details class="show-math" open>
+      <summary><span class="chevron" aria-hidden="true"></span>Formula and worked example</summary>
+      <div class="show-math-body">
+        <code class="formula">food cost % = plate cost ÷ menu price × 100</code>
+        <code class="formula">menu price = plate cost ÷ (target food cost % ÷ 100)</code>
+        <p>
+          Food cost percentage is the share of the menu price spent on ingredients. Solving that for
+          price gives the second formula. It is the same idea as pricing to a margin on the
+          <a href="/selling-price">selling price calculator</a>, with margin = 100% − food cost %.
+        </p>
+
+        <h3>Worked example</h3>
+        <dl class="example-rows">
+          <div class="example-row"><dt>Plate cost</dt><dd>$4.50</dd></div>
+          <div class="example-row"><dt>Target food cost</dt><dd>30%</dd></div>
+          <div class="example-row"><dt>Calculation</dt><dd>$4.50 ÷ 0.30</dd></div>
+          <div class="example-row is-result"><dt>Menu price</dt><dd>$15.00</dd></div>
+          <div class="example-row"><dt>Check</dt><dd>$4.50 ÷ $15.00 = 30%</dd></div>
+        </dl>
+      </div>
+    </details>
+  </section>
+
+  <AdSlot enabled={siteConfig.ads.enabled} clientId={siteConfig.ads.clientId} slotId={siteConfig.ads.inContentSlotId} height="250px" />
+
+  <section class="band">
+    <h2 class="band-label">Food cost FAQ</h2>
+    <FaqList faqs={faqs} />
+  </section>
+
+  <MoreTools hrefs={["/break-even", "/price-increase-calculator", "/markup-margin-chart"]} />
+
+  <section class="band">
+    <div class="band-label">Next</div>
+    <NextStep
+      href="/break-even"
+      title="Break-Even Calculator"
+      description="Find out how many covers it takes to pay your monthly rent, labor, and other fixed costs."
+    />
+  </section>
+</Layout>
+
+<script>
+  import { calculateFoodCost } from "@repo/calculators/food-cost";
+  import { formatCurrency, formatPercentValue, readNumericField, wireCalculatorForm } from "@repo/ui";
+
+  const form = document.getElementById("calc-form") as HTMLFormElement;
+  const errorsEl = document.getElementById("form-errors") as HTMLUListElement;
+  const byId = (id: string) => document.getElementById(id)!;
+  const value = (id: string) => readNumericField(id);
+  const scenarioPercents = [25, 28, 35];
+
+  function readInputs() {
+    return { plateCost: value("plateCost"), targetFoodCostPercent: value("targetFoodCostPercent") };
+  }
+
+  wireCalculatorForm({
+    form,
+    errorsEl,
+    calculatorId: "food-cost",
+    calculate: calculateFoodCost,
+    readInputs,
+    renderResult(data) {
+      const input = readInputs();
+      byId("answer-value").textContent = formatCurrency(data.menuPrice);
+      byId("answer-sentence").textContent = `keeps ingredients at ${formatPercentValue(
+        input.targetFoodCostPercent
+      )} of what the guest pays.`;
+      byId("eq-cost").textContent = formatCurrency(input.plateCost);
+      byId("eq-divisor").textContent = (input.targetFoodCostPercent / 100).toFixed(2);
+      byId("eq-price").textContent = formatCurrency(data.menuPrice);
+      byId("metric-profit").textContent = formatCurrency(data.grossProfitPerPlate);
+      byId("metric-markup").textContent = formatPercentValue(data.equivalentMarkupPercent);
+      byId("take-profit").textContent = formatCurrency(data.grossProfitPerPlate);
+      byId("take-double").textContent = formatCurrency(input.plateCost * 2);
+
+      scenarioPercents.forEach((percent, index) => {
+        const result = calculateFoodCost({ ...input, targetFoodCostPercent: percent });
+        byId(`scenario-${index}`).textContent = result.ok ? formatCurrency(result.data.menuPrice) : "—";
+      });
+    },
+  });
+</script>

@@ -1,0 +1,20 @@
+# Monthly dependency update PRs. Grouped so one PR covers routine bumps
+# instead of a dozen; CI (build, typecheck, tests) runs on each PR.
+version: 2
+updates:
+  - package-ecosystem: "npm" # also handles pnpm workspaces and pnpm-lock.yaml
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 5
+    groups:
+      minor-and-patch:
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    groups:
+      actions:
+        patterns: ["*"]

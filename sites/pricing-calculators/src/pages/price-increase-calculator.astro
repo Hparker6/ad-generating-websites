@@ -1,0 +1,352 @@
+---
+import { calculatePriceChange } from "@repo/calculators/price-change";
+import { buildMeta } from "@repo/seo";
+import { formatCurrency, formatNumber, formatPercentValue } from "@repo/ui";
+import AdSlot from "@repo/ui/components/AdSlot.astro";
+import FaqList from "@repo/ui/components/FaqList.astro";
+import Layout from "@repo/ui/components/Layout.astro";
+import NextStep from "@repo/ui/components/NextStep.astro";
+import { siteConfig } from "../../site.config";
+import MoreTools from "../components/MoreTools.astro";
+import { footerColumns, footerTagline, navItems } from "../site-nav";
+import { formatUpdated, getTool, toolStructuredData } from "../tools";
+
+const tool = getTool("/price-increase-calculator");
+
+const meta = buildMeta(siteConfig, {
+  title: "Price Increase Calculator: How Many Sales Can You Lose?",
+  description:
+    "Free price increase calculator: see how much sales volume you can lose after raising prices and still make the same gross profit, plus your new margin.",
+  path: tool.href,
+});
+
+const defaults = { currentPrice: 100, unitCost: 60, increasePercent: 10 };
+
+function lossFor(increase: number) {
+  const result = calculatePriceChange({
+    currentPrice: defaults.currentPrice,
+    unitCost: defaults.unitCost,
+    changePercent: increase,
+  });
+  if (!result.ok || result.data.volumeChangeToBreakEvenPercent === null) {
+    throw new Error("Default price-increase inputs must be valid");
+  }
+  return result.data;
+}
+
+const seed = lossFor(defaults.increasePercent);
+const canLose = -seed.volumeChangeToBreakEvenPercent!;
+
+// Same offsets the script uses, rendered server-side so the page reads
+// correctly before JavaScript runs.
+const scenarioRows = [
+  Math.max(defaults.increasePercent - 5, 1),
+  defaults.increasePercent + 5,
+  defaults.increasePercent + 10,
+].map((increase) => ({
+  label: `${formatPercentValue(increase, 0)} increase`,
+  value: `${formatPercentValue(-lossFor(increase).volumeChangeToBreakEvenPercent!)} of sales`,
+}));
+
+const presets = [
+  { label: "Coffee shop", values: { currentPrice: 4.5, unitCost: 1.35, increasePercent: 10 } },
+  { label: "Agency retainer", values: { currentPrice: 3000, unitCost: 1800, increasePercent: 15 } },
+  { label: "Thin-margin goods", values: { currentPrice: 12, unitCost: 10, increasePercent: 5 } },
+];
+
+const faqs = [
+  {
+    question: "How many customers can I lose after a price increase?",
+    answer:
+      "Divide your current profit per unit by the profit per unit at the new price, and subtract that from 1. At $100 with a $60 cost, a 10% increase lifts profit per unit from $40 to $50, so you can sell 1 − 40 ÷ 50 = 20% fewer units and earn exactly the same gross profit.",
+  },
+  {
+    question: "Why can low-margin businesses lose so few customers?",
+    answer:
+      "When margin is thin, a price increase grows profit per unit by a large proportion. A $12 item that costs $10 earns $2; a 5% increase adds $0.60 — a 30% jump in profit per unit — so you could lose about 23% of volume. High-margin businesses gain proportionally less from the same increase.",
+  },
+  {
+    question: "Does this mean I should raise prices?",
+    answer:
+      "It tells you the break-even point, not what customers will actually do. If you expect to lose fewer sales than the figure shown, the increase is likely to raise profit. Price sensitivity depends on your market, competitors, and how the change is communicated.",
+  },
+  {
+    question: "What should I include in cost per unit?",
+    answer:
+      "Every cost that rises with each sale — materials, wholesale cost, packaging, shipping you pay, payment fees, commissions. Fixed costs like rent and salaries don't change the answer because they're the same at either price.",
+  },
+  {
+    question: "Is this the same as price elasticity?",
+    answer:
+      "Related but simpler. Elasticity measures how demand actually responds to price. This calculator finds the volume drop at which you'd be no better off — the threshold your real elasticity has to beat.",
+  },
+];
+
+const structuredData = toolStructuredData(tool, meta.description);
+---
+
+<Layout
+  config={siteConfig}
+  meta={meta}
+  structuredData={structuredData}
+  navItems={navItems}
+  footerColumns={footerColumns}
+  footerTagline={footerTagline}
+>
+  <div class="page-header">
+    <h1 class="page-title">{tool.name}</h1>
+    <p class="lede">
+      A price increase adds straight to profit per unit, so you can afford to sell less. Sales you can
+      lose = (1 − profit per unit now ÷ profit per unit after) × 100. Enter your numbers to find that
+      threshold.
+    </p>
+    <p class="page-meta">Updated <time datetime={tool.updated}>{formatUpdated(tool.updated)}</time> · Standard cost-accounting formulas, shown in full below.</p>
+  </div>
+
+  <div class="calc-grid">
+    <form id="calc-form" class="panel" novalidate>
+      <div class="preset-row">
+        <span class="preset-label">Try an example</span>
+        {
+          presets.map((preset) => (
+            <button type="button" class="preset" data-preset={JSON.stringify(preset.values)} aria-pressed="false">
+              {preset.label}
+            </button>
+          ))
+        }
+      </div>
+
+      <div class="field-stack">
+        <div class="field">
+          <label for="currentPrice">Current price</label>
+          <div class="input-row">
+            <button type="button" class="stepper" data-step-for="currentPrice" data-step-delta="-1" aria-label="Decrease current price by 1">−</button>
+            <div class="input-affix">
+              <span class="affix affix-start" aria-hidden="true">$</span>
+              <input type="number" id="currentPrice" name="currentPrice" min="0.01" max="1000000" step="0.01" value={defaults.currentPrice} inputmode="decimal" />
+            </div>
+            <button type="button" class="stepper" data-step-for="currentPrice" data-step-delta="1" aria-label="Increase current price by 1">+</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="unitCost">Cost per unit</label>
+          <div class="input-row">
+            <button type="button" class="stepper" data-step-for="unitCost" data-step-delta="-1" aria-label="Decrease unit cost by 1">−</button>
+            <div class="input-affix">
+              <span class="affix affix-start" aria-hidden="true">$</span>
+              <input type="number" id="unitCost" name="unitCost" min="0" max="1000000" step="0.01" value={defaults.unitCost} inputmode="decimal" aria-describedby="unitCost-hint" />
+            </div>
+            <button type="button" class="stepper" data-step-for="unitCost" data-step-delta="1" aria-label="Increase unit cost by 1">+</button>
+          </div>
+          <span class="field-hint" id="unitCost-hint">Anything that scales with each sale: materials, shipping, fees.</span>
+        </div>
+
+        <div class="field">
+          <label for="increasePercent">Price increase</label>
+          <div class="input-row">
+            <button type="button" class="stepper" data-step-for="increasePercent" data-step-delta="-1" aria-label="Decrease price increase by 1 percent">−</button>
+            <div class="input-affix">
+              <span class="affix affix-end" aria-hidden="true">%</span>
+              <input type="number" id="increasePercent" name="increasePercent" min="0" max="1000" step="1" value={defaults.increasePercent} inputmode="decimal" />
+            </div>
+            <button type="button" class="stepper" data-step-for="increasePercent" data-step-delta="1" aria-label="Increase price increase by 1 percent">+</button>
+          </div>
+          <input type="range" id="increaseSlider" min="0" max="50" step="1" value={defaults.increasePercent} data-sync-with="increasePercent" aria-label="Price increase slider" />
+          <div class="range-scale" aria-hidden="true">
+            <span>0%</span>
+            <span>25%</span>
+            <span>50%</span>
+          </div>
+        </div>
+      </div>
+
+      <ul id="form-errors" class="error-list" aria-live="polite"></ul>
+
+      <button type="button" class="copy-link" data-copy-link aria-live="polite">Copy link to this result</button>
+    </form>
+
+    <section class="answer" aria-label="Result" aria-live="polite">
+      <div class="answer-head">
+        <span class="answer-label">Sales you can lose and still break even</span>
+        <strong class="answer-value is-positive" id="answer-value">{formatPercentValue(canLose)}</strong>
+        <p class="answer-sentence" id="answer-sentence">
+          Lose fewer sales than that and the increase makes you more money.
+        </p>
+      </div>
+
+      <div class="equation" data-label="Why">
+        <span class="eq-term">
+          <span class="eq-value" id="eq-old">{formatCurrency(seed.currentProfitPerUnit)}</span>
+          <span class="eq-name">Profit / unit now</span>
+        </span>
+        <span class="eq-op" aria-hidden="true">÷</span>
+        <span class="visually-hidden">divided by</span>
+        <span class="eq-term">
+          <span class="eq-value" id="eq-new">{formatCurrency(seed.newProfitPerUnit)}</span>
+          <span class="eq-name">Profit / unit after</span>
+        </span>
+        <span class="eq-op" aria-hidden="true">=</span>
+        <span class="visually-hidden">equals</span>
+        <span class="eq-term is-result">
+          <span class="eq-value" id="eq-factor">{(seed.currentProfitPerUnit / seed.newProfitPerUnit).toFixed(2)}×</span>
+          <span class="eq-name">Units needed</span>
+        </span>
+      </div>
+
+      <div class="answer-metrics">
+        <div class="metric">
+          <span class="metric-label">New price</span>
+          <span class="metric-value" id="metric-price">{formatCurrency(seed.newPrice)}</span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">Margin now → after</span>
+          <span class="metric-value" id="metric-margin">
+            {formatPercentValue(seed.currentMarginPercent)} → {formatPercentValue(seed.newMarginPercent)}
+          </span>
+        </div>
+      </div>
+
+      <div class="scenarios">
+        <h2>Other increases</h2>
+        <ul class="scenario-list">
+          {
+            scenarioRows.map((row, index) => (
+              <li>
+                <span id={`scenario-${index}-label`}>{row.label}</span>
+                <span class="scenario-value" id={`scenario-${index}`}>{row.value}</span>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </section>
+  </div>
+
+  <section class="band takeaways">
+    <h2 class="band-label">What the increase means</h2>
+    <ul class="takeaway-list">
+      <li>
+        If <strong class="figure">100</strong> customers buy today, you'd make the same gross profit with
+        just <strong class="figure is-positive" id="take-units">{formatNumber(Math.ceil(100 * (1 - canLose / 100) - 1e-9))}</strong>
+        at the new price.
+      </li>
+      <li>
+        Profit per unit rises from <strong class="figure" id="take-old">{formatCurrency(seed.currentProfitPerUnit)}</strong>
+        to <strong class="figure is-positive" id="take-new">{formatCurrency(seed.newProfitPerUnit)}</strong> — every
+        customer who stays is worth more.
+      </li>
+      <li>
+        The question to ask isn't "will anyone leave?" but "will more than
+        <strong class="figure" id="take-threshold">{formatPercentValue(canLose)}</strong> leave?"
+      </li>
+    </ul>
+  </section>
+
+  <section class="band">
+    <h2 class="band-label">Price increase formula</h2>
+    <details class="show-math" open>
+      <summary><span class="chevron" aria-hidden="true"></span>Formula and worked example</summary>
+      <div class="show-math-body">
+        <code class="formula">new price = current price × (1 + increase ÷ 100)</code>
+        <code class="formula">sales you can lose % = (1 − profit per unit now ÷ profit per unit after) × 100</code>
+        <p>
+          Gross profit is units × profit per unit. When profit per unit rises, the same total can come
+          from fewer units — exactly as many fewer as the ratio of old to new profit per unit.
+        </p>
+
+        <h3>Worked example</h3>
+        <dl class="example-rows">
+          <div class="example-row"><dt>Current price · cost</dt><dd>$100 · $60</dd></div>
+          <div class="example-row"><dt>Profit per unit now</dt><dd>$40</dd></div>
+          <div class="example-row"><dt>10% increase → new price</dt><dd>$110</dd></div>
+          <div class="example-row"><dt>Profit per unit after</dt><dd>$50</dd></div>
+          <div class="example-row is-result"><dt>Sales you can lose</dt><dd>1 − 40 ÷ 50 = 20%</dd></div>
+        </dl>
+      </div>
+    </details>
+  </section>
+
+  <AdSlot enabled={siteConfig.ads.enabled} clientId={siteConfig.ads.clientId} slotId={siteConfig.ads.inContentSlotId} height="250px" />
+
+  <section class="band">
+    <h2 class="band-label">Price increase FAQ</h2>
+    <FaqList faqs={faqs} />
+  </section>
+
+  <MoreTools hrefs={["/discount-calculator", "/selling-price", "/break-even"]} />
+
+  <section class="band">
+    <div class="band-label">Next</div>
+    <NextStep
+      href="/selling-price"
+      title="Selling Price Calculator"
+      description="Set the new price from the margin you want instead of a flat percentage."
+    />
+  </section>
+</Layout>
+
+<script>
+  import { calculatePriceChange } from "@repo/calculators/price-change";
+  import { formatCurrency, formatNumber, formatPercentValue, readNumericField, wireCalculatorForm } from "@repo/ui";
+
+  const form = document.getElementById("calc-form") as HTMLFormElement;
+  const errorsEl = document.getElementById("form-errors") as HTMLUListElement;
+  const byId = (id: string) => document.getElementById(id)!;
+  const value = (id: string) => readNumericField(id);
+
+  function readInputs() {
+    return {
+      currentPrice: value("currentPrice"),
+      unitCost: value("unitCost"),
+      changePercent: value("increasePercent"),
+    };
+  }
+
+  wireCalculatorForm({
+    form,
+    errorsEl,
+    calculatorId: "price-increase",
+    readInputs,
+    // A negative increase is a discount; that has its own page.
+    calculate: (input) => {
+      const { changePercent } = input as ReturnType<typeof readInputs>;
+      if (changePercent < 0) return { ok: false, errors: ["Price increase can't be negative."] };
+      return calculatePriceChange(input);
+    },
+    renderResult(data) {
+      const input = readInputs();
+      // An increase never pushes profit per unit to zero, so volume is always a number here.
+      const canLose = -(data.volumeChangeToBreakEvenPercent ?? 0);
+
+      byId("answer-value").textContent = formatPercentValue(canLose);
+      byId("answer-sentence").textContent =
+        canLose === 0
+          ? "No increase, no room to lose sales."
+          : "Lose fewer sales than that and the increase makes you more money.";
+      byId("eq-old").textContent = formatCurrency(data.currentProfitPerUnit);
+      byId("eq-new").textContent = formatCurrency(data.newProfitPerUnit);
+      byId("eq-factor").textContent = `${(data.currentProfitPerUnit / data.newProfitPerUnit).toFixed(2)}×`;
+      byId("metric-price").textContent = formatCurrency(data.newPrice);
+      byId("metric-margin").textContent = `${formatPercentValue(data.currentMarginPercent)} → ${formatPercentValue(
+        data.newMarginPercent
+      )}`;
+
+      byId("take-units").textContent = formatNumber(Math.ceil(100 * (1 - canLose / 100) - 1e-9));
+      byId("take-old").textContent = formatCurrency(data.currentProfitPerUnit);
+      byId("take-new").textContent = formatCurrency(data.newProfitPerUnit);
+      byId("take-threshold").textContent = formatPercentValue(canLose);
+
+      const increase = input.changePercent;
+      const scenarios = [Math.max(increase - 5, 1), increase + 5, increase + 10];
+      scenarios.forEach((scenarioIncrease, index) => {
+        const result = calculatePriceChange({ ...input, changePercent: scenarioIncrease });
+        byId(`scenario-${index}-label`).textContent = `${formatPercentValue(scenarioIncrease, 0)} increase`;
+        byId(`scenario-${index}`).textContent =
+          result.ok && result.data.volumeChangeToBreakEvenPercent !== null
+            ? `${formatPercentValue(-result.data.volumeChangeToBreakEvenPercent)} of sales`
+            : "—";
+      });
+    },
+  });
+</script>

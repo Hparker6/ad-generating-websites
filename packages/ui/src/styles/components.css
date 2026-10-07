@@ -1,0 +1,1453 @@
+/* ============================================================
+   The band — the structural signature of the site.
+
+   Every section hangs off a hairline with its name set in the left
+   margin, the way a reference manual or a spec sheet is set. It
+   replaces the card: sections are separated by a rule and a label
+   instead of by a box, so the page reads as one continuous
+   document rather than a stack of panels.
+   ============================================================ */
+.band {
+  border-top: 1px solid var(--rule);
+  padding-top: var(--space-5);
+  margin-top: var(--space-7);
+}
+
+.band-label {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: var(--space-4);
+}
+
+@media (min-width: 60rem) {
+  .band {
+    display: grid;
+    grid-template-columns: var(--margin-col) minmax(0, 1fr);
+    gap: 0 var(--margin-gap);
+  }
+
+  /* The label sits in the margin, aligned to the first baseline of
+     the content it names. */
+  .band-label {
+    margin-bottom: 0;
+    padding-top: 0.2em;
+  }
+}
+
+/* ============================================================
+   Presets, steppers & sliders
+   ============================================================ */
+.preset-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding-bottom: var(--space-5);
+  margin-bottom: var(--space-5);
+  border-bottom: 1px solid var(--rule);
+}
+
+.preset-label {
+  flex-basis: 100%;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: var(--space-1);
+}
+
+.preset {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--ink-2);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  white-space: nowrap;
+  transition: border-color var(--transition), color var(--transition), background var(--transition);
+}
+
+.preset:hover {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+.preset[aria-pressed="true"] {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+}
+
+.input-row {
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-2);
+}
+
+.input-row .input-affix {
+  flex: 1;
+  min-width: 0;
+}
+
+.stepper {
+  flex-shrink: 0;
+  width: 2.5rem;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--ink-2);
+  font-size: 1.1rem;
+  line-height: 1;
+  transition: border-color var(--transition), color var(--transition);
+}
+
+.stepper:hover {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  margin-top: var(--space-3);
+  background: transparent;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 2px;
+  background: var(--rule-strong);
+}
+
+input[type="range"]::-moz-range-track {
+  height: 2px;
+  background: var(--rule-strong);
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  margin-top: -0.5rem;
+  width: 1.05rem;
+  height: 1.05rem;
+  border-radius: var(--radius-pill);
+  background: var(--ink);
+  border: 2px solid var(--paper);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 1.05rem;
+  height: 1.05rem;
+  border-radius: var(--radius-pill);
+  background: var(--ink);
+  border: 2px solid var(--paper);
+}
+
+.range-scale {
+  display: flex;
+  justify-content: space-between;
+  margin-top: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================================================
+   Calculator head: controls in the margin, answer in the body
+   ============================================================ */
+.calc-grid {
+  display: grid;
+  gap: var(--space-6);
+  align-items: start;
+}
+
+@media (min-width: 60rem) {
+  .calc-grid {
+    grid-template-columns: 18.5rem minmax(0, 1fr);
+    gap: 0 var(--space-7);
+  }
+
+  /* A rule down the gutter separates input from output without a
+     border box around either. */
+  .answer {
+    padding-left: var(--space-7);
+    border-left: 1px solid var(--rule);
+  }
+}
+
+/* ============================================================
+   The answer — a typographic event, not a panel.
+
+   No fill, no border, no shadow. It dominates by size and by being
+   the only serif figure at that scale on the page.
+   ============================================================ */
+.answer {
+  background: none;
+  border-radius: 0;
+  box-shadow: none;
+  color: var(--ink);
+}
+
+.answer-head {
+  padding: 0;
+}
+
+.answer-label {
+  display: block;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.answer-value {
+  display: block;
+  margin-top: var(--space-3);
+  font-family: var(--font-display);
+  font-size: var(--text-figure);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 0.86;
+  color: var(--profit);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* Colour encodes the outcome, never decoration. */
+.answer-value.is-negative {
+  color: var(--loss);
+}
+
+.answer-sentence {
+  margin-top: var(--space-4);
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  line-height: 1.4;
+  color: var(--ink);
+  max-width: 34ch;
+}
+
+.answer-implication {
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--rule);
+  font-size: var(--text-base);
+  line-height: 1.55;
+  color: var(--ink-2);
+  max-width: 48ch;
+}
+
+.answer-implication strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.answer-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-6);
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--rule);
+}
+
+.metric {
+  padding: 0;
+  min-width: 0;
+}
+
+.metric + .metric {
+  border-left: none;
+}
+
+.metric-label {
+  display: block;
+  font-size: var(--text-xs);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.metric-value {
+  display: block;
+  margin-top: var(--space-1);
+  font-family: var(--font-display);
+  font-size: 1.375rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.metric-value.is-negative {
+  color: var(--loss);
+}
+
+/* ============================================================
+   Scenario rows
+   ============================================================ */
+.scenarios {
+  border-top: 1px solid var(--rule);
+  padding: var(--space-4) 0 0;
+  margin-top: var(--space-5);
+}
+
+.scenarios h2 {
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: var(--space-3);
+}
+
+.scenario-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-2);
+  max-width: 44ch;
+}
+
+.scenario-list li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--ink-2);
+  /* Leader dots, the way a table of contents or a price list is set. */
+  border-bottom: 1px dotted var(--rule-strong);
+  padding-bottom: var(--space-2);
+}
+
+.scenario-value {
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums lining-nums;
+  white-space: nowrap;
+}
+
+.scenario-value.is-negative {
+  color: var(--loss);
+}
+
+/* While the inputs are invalid the supporting figures are withdrawn
+   rather than dimmed — dimming would drop them below the contrast
+   minimum while still reading as data. */
+.answer[data-stale] .answer-implication,
+.answer[data-stale] .answer-metrics,
+.answer[data-stale] .scenarios,
+.answer[data-stale] .equation {
+  display: none;
+}
+
+.answer[data-stale] .answer-value {
+  color: var(--ink-3);
+}
+
+/* ============================================================
+   THE EQUATION
+
+   The signature element. Rather than describing the arithmetic in a
+   sentence or hiding it behind a toggle, the page sets the actual
+   calculation as display typography with the operands live. It is
+   the shortest path from "what are my numbers" to "why is that the
+   answer", and it is purpose-built per calculator: markup vs margin
+   stacks two of them so the shared numerator and the differing
+   denominator are impossible to miss.
+   ============================================================ */
+.equation {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-4) var(--space-5);
+  margin-top: var(--space-5);
+  padding: var(--space-5) 0;
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* Named in the margin like any other band, so it reads as a stated
+   derivation rather than a decorative row of numbers. */
+.equation::before {
+  content: attr(data-label);
+  flex-basis: 100%;
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: calc(-1 * var(--space-1));
+}
+
+.eq-term {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.eq-value {
+  font-size: clamp(1.5rem, 1.1rem + 1.5vw, 2.125rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.eq-name {
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  line-height: 1.3;
+}
+
+.eq-op {
+  font-size: clamp(1.25rem, 1rem + 1vw, 1.75rem);
+  font-weight: 400;
+  line-height: 1;
+  color: var(--ink-3);
+  padding-top: 0.12em;
+  flex-shrink: 0;
+}
+
+/* The result term carries the only colour in the equation, and a
+   rule beneath it to mark where the reading ends. */
+.eq-term.is-result .eq-value {
+  color: var(--profit);
+  padding-bottom: 0.2em;
+  border-bottom: 2px solid var(--profit);
+}
+
+.eq-term.is-result.is-negative .eq-value {
+  color: var(--loss);
+  border-bottom-color: var(--loss);
+}
+
+.eq-term.is-result .eq-name {
+  color: var(--ink-2);
+}
+
+/* A second equation stacked under the first (markup vs margin): one shared
+   top rule, so the pair reads as a single comparison. */
+.equation + .equation {
+  margin-top: 0;
+  border-top: none;
+}
+
+.eq-note {
+  margin-top: var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--ink-2);
+  max-width: 58ch;
+  line-height: 1.55;
+}
+
+.eq-note strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* ============================================================
+   Visual band
+   ============================================================ */
+.viz {
+  margin: 0;
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.viz-title {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  margin-bottom: var(--space-5);
+}
+
+.viz svg {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.viz figcaption,
+.viz-takeaway {
+  margin-top: var(--space-5);
+  font-size: var(--text-base);
+  line-height: 1.55;
+  color: var(--ink-2);
+  max-width: 64ch;
+}
+
+.viz figcaption strong,
+.viz-takeaway strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.split-bar,
+.split-scale,
+.compare,
+.milestone,
+.stack-group,
+.viz-secondary {
+  max-width: 50rem;
+}
+
+/* ---- chart ---- */
+.chart-grid-line {
+  stroke: var(--rule);
+  stroke-width: 1;
+}
+
+.chart-axis {
+  stroke: var(--rule-strong);
+  stroke-width: 1;
+}
+
+.chart-line-revenue {
+  stroke: var(--profit);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  fill: none;
+}
+
+.chart-line-cost {
+  stroke: var(--cost);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 6 4;
+  fill: none;
+}
+
+.chart-loss-zone {
+  fill: var(--loss);
+  opacity: 0.08;
+}
+
+.chart-profit-zone {
+  fill: var(--profit);
+  opacity: 0.12;
+}
+
+.chart-marker {
+  fill: var(--paper);
+  stroke: var(--ink);
+  stroke-width: 2.5;
+}
+
+.chart-marker-line {
+  stroke: var(--ink);
+  stroke-width: 1;
+  stroke-dasharray: 2 3;
+}
+
+.chart-label-axis {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  fill: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.chart-label-line {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.chart-label-line.is-revenue {
+  fill: var(--profit);
+}
+
+.chart-label-line.is-cost {
+  fill: var(--cost);
+}
+
+.chart-label-point {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
+  fill: var(--ink);
+  paint-order: stroke;
+  stroke: var(--paper);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+}
+
+@media (max-width: 48rem) {
+  .chart-label-axis,
+  .chart-label-point,
+  .chart-region-label {
+    font-size: 18px;
+  }
+  .chart-label-line {
+    font-size: 14px;
+  }
+}
+
+.chart-region-label {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.chart-region-label.is-loss {
+  fill: var(--loss);
+}
+
+.chart-region-label.is-profit {
+  fill: var(--profit);
+}
+
+/* ---- bars ---- */
+.stack-group + .stack-group {
+  margin-top: var(--space-5);
+}
+
+.stack-group-label {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.stack-group-label span:last-child {
+  color: var(--ink-2);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.stack-bar {
+  display: flex;
+  width: 100%;
+  height: 3.25rem;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--surface-sunk);
+}
+
+.stack-segment {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  padding-inline: var(--space-3);
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  font-variant-numeric: tabular-nums lining-nums;
+  transition: width var(--transition);
+}
+
+.stack-segment.is-cost,
+.stack-segment.is-fixed {
+  background: var(--cost);
+  color: var(--cost-ink);
+}
+
+.stack-segment.is-contribution,
+.stack-segment.is-profit {
+  background: var(--profit);
+  color: var(--profit-ink);
+}
+
+.stack-segment.is-loss {
+  background: var(--loss);
+  color: #ffffff;
+}
+
+.stack-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-5);
+  margin-top: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--ink-2);
+}
+
+.stack-key span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.key-dot {
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.key-dot.is-cost,
+.key-dot.is-fixed {
+  background: var(--cost);
+}
+
+.key-dot.is-contribution,
+.key-dot.is-profit {
+  background: var(--profit);
+}
+
+.key-dot.is-loss {
+  background: var(--loss);
+}
+
+/* ---- milestone track ---- */
+.milestone {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.milestone-track {
+  display: flex;
+  width: 100%;
+  height: 3rem;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--surface-sunk);
+}
+
+.milestone-segment {
+  display: flex;
+  align-items: center;
+  padding-inline: var(--space-4);
+  min-width: 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  transition: width var(--transition);
+}
+
+.milestone-segment.is-cover {
+  background: var(--cost);
+  color: var(--cost-ink);
+}
+
+.milestone-segment.is-earn {
+  background: var(--profit);
+  color: var(--profit-ink);
+}
+
+.milestone-scale {
+  position: relative;
+  height: 1.4rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.milestone-tick {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font-size: var(--text-xs);
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+.milestone-tick.is-start {
+  transform: none;
+  left: 0;
+}
+
+.milestone-tick.is-end {
+  transform: none;
+  right: 0;
+}
+
+.milestone-tick strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.viz-secondary {
+  margin-top: var(--space-5);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--rule);
+}
+
+/* ---- comparison bars ---- */
+.compare {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.compare-row {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.compare-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--ink-2);
+}
+
+.compare-head strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.compare-result {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 600;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.compare-result.is-negative {
+  color: var(--loss);
+}
+
+.compare-bar {
+  display: flex;
+  height: 2.5rem;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--surface-sunk);
+  transition: width var(--transition);
+}
+
+.compare-base {
+  display: flex;
+  align-items: center;
+  padding-inline: var(--space-3);
+  min-width: 0;
+  background: var(--cost);
+  color: var(--cost-ink);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  font-variant-numeric: tabular-nums;
+}
+
+.compare-profit {
+  display: flex;
+  align-items: center;
+  padding-inline: var(--space-3);
+  min-width: 0;
+  background: var(--profit);
+  color: var(--profit-ink);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  font-variant-numeric: tabular-nums;
+}
+
+.compare-profit.is-loss {
+  background: var(--loss);
+  color: #ffffff;
+}
+
+.compare-denominator {
+  height: 3px;
+  border-radius: var(--radius-pill);
+  background: var(--ink);
+  transition: width var(--transition);
+}
+
+.compare-denominator-label {
+  display: block;
+  font-size: var(--text-xs);
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- price split ---- */
+.split-bar {
+  display: flex;
+  width: 100%;
+  height: 4rem;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--surface-sunk);
+}
+
+.split-part {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.1rem;
+  padding-inline: var(--space-4);
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  transition: width var(--transition);
+}
+
+.split-part.is-cost {
+  background: var(--cost);
+  color: var(--cost-ink);
+}
+
+.split-part.is-keep {
+  background: var(--profit);
+  color: var(--profit-ink);
+}
+
+.split-part.is-loss {
+  background: var(--loss);
+  color: #ffffff;
+}
+
+.split-amount {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.split-name {
+  font-size: var(--text-xs);
+  letter-spacing: 0.04em;
+}
+
+.split-scale {
+  display: flex;
+  justify-content: space-between;
+  margin-top: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.split-scale strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* ============================================================
+   "What this means"
+   ============================================================ */
+.takeaways {
+  margin: 0;
+}
+
+.takeaway-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-4);
+  max-width: 62ch;
+}
+
+.takeaway-list li {
+  position: relative;
+  padding-left: var(--space-5);
+  font-size: var(--text-base);
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+
+.takeaway-list li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.72em;
+  width: 0.6rem;
+  height: 0;
+  border-top: 1px solid var(--rule-strong);
+}
+
+.figure {
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.figure.is-positive {
+  color: var(--profit);
+}
+
+.figure.is-negative {
+  color: var(--loss);
+}
+
+/* ============================================================
+   "Show the math"
+   ============================================================ */
+.show-math {
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  background: none;
+}
+
+.show-math > summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 0 0 var(--space-4);
+  cursor: pointer;
+  font-weight: 600;
+  font-size: var(--text-sm);
+  color: var(--ink-2);
+  list-style: none;
+}
+
+.show-math > summary::-webkit-details-marker {
+  display: none;
+}
+
+.show-math > summary:hover {
+  color: var(--ink);
+}
+
+.show-math .chevron {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform var(--transition);
+  flex-shrink: 0;
+}
+
+.show-math[open] .chevron {
+  transform: rotate(45deg);
+}
+
+.show-math-body {
+  padding: 0;
+  max-width: var(--measure);
+}
+
+.show-math-body > * + * {
+  margin-top: var(--space-4);
+}
+
+.show-math-body p {
+  color: var(--ink-2);
+}
+
+.show-math-body h3 {
+  font-size: var(--text-base);
+  margin-top: var(--space-5);
+}
+
+/* A ledger, not a card: alternating rows, hairline rules, figures
+   right-aligned on a common axis. */
+.example-rows {
+  display: grid;
+  gap: 0;
+  font-variant-numeric: tabular-nums lining-nums;
+  border-top: 1px solid var(--rule);
+  max-width: 34rem;
+}
+
+.example-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-4);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--rule);
+  font-size: var(--text-sm);
+}
+
+.example-row dt {
+  color: var(--ink-2);
+}
+
+.example-row dd {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.example-row.is-result {
+  border-bottom: 2px solid var(--ink);
+}
+
+.example-row.is-result dt {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.example-row.is-result dd {
+  color: var(--profit);
+}
+
+/* ============================================================
+   Next step
+   ============================================================ */
+.next-step {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  text-decoration: none;
+}
+
+.next-step:hover .next-step-title {
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.next-step-label {
+  display: none;
+}
+
+.next-step-title {
+  display: block;
+  font-family: var(--font-display);
+  font-size: var(--text-h2);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+}
+
+.next-step-desc {
+  display: block;
+  margin-top: var(--space-2);
+  font-size: var(--text-base);
+  color: var(--ink-2);
+  max-width: 48ch;
+}
+
+.next-step-cue {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.next-step-cue::after {
+  content: " →";
+  display: inline-block;
+  transition: transform var(--transition);
+}
+
+.next-step:hover .next-step-cue::after {
+  transform: translateX(3px);
+}
+
+/* ============================================================
+   Homepage index
+   ============================================================ */
+.task-grid {
+  display: grid;
+  gap: 0;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--ink);
+}
+
+/* An index, set as ruled rows. Each row carries its own number in
+   the margin, the way a contents page does. */
+.task-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: 2.25rem minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: var(--space-3) var(--space-4);
+  padding: var(--space-5) 0;
+  border-bottom: 1px solid var(--rule);
+  background: none;
+  border-radius: 0;
+  box-shadow: none;
+  transition: background var(--transition);
+}
+
+.task-card:hover {
+  background: color-mix(in srgb, var(--ink) 3%, transparent);
+}
+
+.task-card.is-featured {
+  grid-column: auto;
+  padding-block: var(--space-6);
+}
+
+.task-icon {
+  display: none;
+}
+
+.task-num {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.task-question {
+  font-size: var(--text-xl);
+  letter-spacing: -0.015em;
+  line-height: 1.25;
+  grid-column: 2;
+}
+
+.task-card.is-featured .task-question {
+  font-size: var(--text-h2);
+}
+
+.task-question a {
+  text-decoration: none;
+  color: var(--ink);
+}
+
+.task-question a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.task-card:hover .task-question a {
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.task-featured-body {
+  grid-column: 2;
+  min-width: 0;
+}
+
+.task-card p {
+  grid-column: 2;
+  font-size: var(--text-base);
+  color: var(--ink-2);
+  margin: var(--space-2) 0 0;
+  max-width: 54ch;
+}
+
+.task-tool {
+  grid-column: 3;
+  grid-row: 1;
+  align-self: baseline;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+.task-card.is-featured .task-tool {
+  grid-column: 3;
+}
+
+.start-badge {
+  position: static;
+  grid-column: 2;
+  justify-self: start;
+  order: -1;
+  padding: 0;
+  background: none;
+  border-radius: 0;
+  color: var(--profit);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 40rem) {
+  .task-card {
+    grid-template-columns: 1.75rem minmax(0, 1fr);
+  }
+  .task-tool {
+    grid-column: 2;
+    grid-row: auto;
+    margin-top: var(--space-2);
+  }
+}
+
+.fact-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+}
+
+.fact-list li {
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--rule);
+  font-size: var(--text-base);
+  color: var(--ink-2);
+  line-height: 1.55;
+}
+
+.fact-list strong {
+  display: block;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  margin-bottom: var(--space-1);
+}
+
+/* ============================================================
+   Homepage chain
+   ============================================================ */
+.chain {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-4);
+  max-width: 64ch;
+  counter-reset: chain;
+}
+
+.chain-step {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  font-size: var(--text-base);
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+
+.chain-num {
+  flex-shrink: 0;
+  width: 1.5rem;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.chain-step a {
+  font-weight: 500;
+}
+
+/* ============================================================
+   Page meta — the "Updated" line under a tool's heading
+   ============================================================ */
+.page-meta {
+  margin-top: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--ink-3);
+}
+
+.page-meta time {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================================================
+   Reference tables (e.g. the markup ↔ margin chart)
+   ============================================================ */
+.ref-table-wrap {
+  overflow-x: auto;
+  max-width: 40rem;
+}
+
+.ref-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-base);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.ref-table caption {
+  text-align: left;
+  font-size: var(--text-sm);
+  color: var(--ink-3);
+  padding-bottom: var(--space-3);
+}
+
+.ref-table th,
+.ref-table td {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--rule);
+  text-align: right;
+}
+
+.ref-table th:first-child,
+.ref-table td:first-child {
+  text-align: left;
+}
+
+.ref-table thead th {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  border-bottom-color: var(--ink);
+}
+
+.ref-table tbody tr:hover {
+  background: color-mix(in srgb, var(--ink) 3%, transparent);
+}
+
+.ref-table td strong {
+  color: var(--profit);
+  font-weight: 600;
+}
+
+/* ============================================================
+   Copy-link — shares the current inputs as a URL
+   ============================================================ */
+.copy-link {
+  margin-top: var(--space-5);
+  padding: var(--space-2) 0;
+  border: 0;
+  background: none;
+  color: var(--ink-2);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  text-decoration-color: var(--rule-strong);
+  cursor: pointer;
+}
+
+.copy-link:hover {
+  color: var(--ink);
+  text-decoration-color: var(--ink);
+}

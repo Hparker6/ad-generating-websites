@@ -1,0 +1,425 @@
+---
+import { calculateSellingPrice } from "@repo/calculators/selling-price";
+import { buildMeta } from "@repo/seo";
+import { formatCurrency, priceSplitLayout } from "@repo/ui";
+import AdSlot from "@repo/ui/components/AdSlot.astro";
+import FaqList from "@repo/ui/components/FaqList.astro";
+import Layout from "@repo/ui/components/Layout.astro";
+import NextStep from "@repo/ui/components/NextStep.astro";
+import { siteConfig } from "../../site.config";
+import MoreTools from "../components/MoreTools.astro";
+import { footerColumns, footerTagline, navItems } from "../site-nav";
+import { formatUpdated, getTool, toolStructuredData } from "../tools";
+
+const tool = getTool("/selling-price");
+
+const meta = buildMeta(siteConfig, {
+  title: "Selling Price Calculator from Cost & Margin",
+  description:
+    "Enter your unit cost and a target gross margin percentage to calculate the selling price required to hit that margin.",
+  path: "/selling-price",
+});
+
+const defaults = { unitCost: 60, desiredMarginPercent: 40 };
+const seed = calculateSellingPrice(defaults);
+if (!seed.ok) throw new Error("Default selling-price inputs must be valid");
+const split = priceSplitLayout(seed.data.requiredSellingPrice, defaults.unitCost);
+
+const presets = [
+  { label: "Retail product", values: { unitCost: 15, desiredMarginPercent: 40 } },
+  { label: "Service business", values: { unitCost: 150, desiredMarginPercent: 70 } },
+  { label: "Low-margin goods", values: { unitCost: 10, desiredMarginPercent: 15 } },
+];
+
+const faqs = [
+  {
+    question: "Why isn't the selling price just cost plus the margin percentage?",
+    answer:
+      "Because margin is defined as a percentage of the selling price, not of cost — and you don't know the price yet. Adding 40% to a $60 cost gives $84, which is only a 28.6% margin. The correct formula divides cost by (1 − margin), giving $100.",
+  },
+  {
+    question: "Why does the calculator reject a 100% margin (or higher)?",
+    answer:
+      "At exactly 100% the formula divides by zero, so there is no answer — it would require an infinite price. Above 100% it would require a negative cost. A margin target has to stay below 100%.",
+  },
+  {
+    question: "What's the difference between this and the markup vs. margin calculator?",
+    answer:
+      "That tool goes from cost and price to the markup and margin percentages. This one goes the other direction: from cost and a target margin to the price you need to charge.",
+  },
+  {
+    question: "Should I round the price it gives me?",
+    answer:
+      "The price is shown to the nearest cent. Rounding further for a cleaner price point (say $99 instead of $98.67) shifts your realized margin slightly — round up and you gain a little margin, round down and you give a little away.",
+  },
+  {
+    question: "Does this include taxes or payment processing fees?",
+    answer:
+      "No. It only solves the cost-and-margin relationship. If you have per-unit fees that behave like variable costs, add them to your unit cost before entering it here.",
+  },
+];
+
+const structuredData = toolStructuredData(tool, meta.description);
+---
+
+<Layout
+  config={siteConfig}
+  meta={meta}
+  structuredData={structuredData}
+  navItems={navItems}
+  footerColumns={footerColumns}
+  footerTagline={footerTagline}
+>
+  <div class="page-header">
+    <h1 class="page-title">{tool.name}</h1>
+    <p class="lede">Selling price = cost ÷ (1 − target margin). A $60 item needs a $100 price for a 40% margin — not $84. Enter your cost and target margin to get your price.</p>
+    <p class="page-meta">Updated <time datetime={tool.updated}>{formatUpdated(tool.updated)}</time> · Standard cost-accounting formulas, shown in full below.</p>
+  </div>
+
+  <div class="calc-grid">
+    <form id="calc-form" class="panel" novalidate>
+      <div class="preset-row">
+        <span class="preset-label">Try an example</span>
+        {
+          presets.map((preset) => (
+            <button type="button" class="preset" data-preset={JSON.stringify(preset.values)} aria-pressed="false">
+              {preset.label}
+            </button>
+          ))
+        }
+      </div>
+
+      <div class="field-stack">
+        <div class="field">
+          <label for="unitCost">Unit cost</label>
+          <div class="input-row">
+            <button type="button" class="stepper" data-step-for="unitCost" data-step-delta="-1" aria-label="Decrease unit cost by 1">−</button>
+            <div class="input-affix">
+              <span class="affix affix-start" aria-hidden="true">$</span>
+              <input type="number" id="unitCost" name="unitCost" min="0.01" max="1000000" step="0.01" value="60" inputmode="decimal" aria-describedby="unitCost-hint" />
+            </div>
+            <button type="button" class="stepper" data-step-for="unitCost" data-step-delta="1" aria-label="Increase unit cost by 1">+</button>
+          </div>
+          <span class="field-hint" id="unitCost-hint">Include per-unit fees that act like costs.</span>
+        </div>
+
+        <div class="field">
+          <label for="desiredMarginPercent">Target margin</label>
+          <div class="input-row">
+            <button type="button" class="stepper" data-step-for="desiredMarginPercent" data-step-delta="-5" aria-label="Decrease margin by 5 percent">−</button>
+            <div class="input-affix">
+              <span class="affix affix-end" aria-hidden="true">%</span>
+              <input
+                type="number"
+                id="desiredMarginPercent"
+                name="desiredMarginPercent"
+                min="0"
+                max="99.99"
+                step="1"
+                value="40"
+                inputmode="decimal"
+              />
+            </div>
+            <button type="button" class="stepper" data-step-for="desiredMarginPercent" data-step-delta="5" aria-label="Increase margin by 5 percent">+</button>
+          </div>
+          <input
+            type="range"
+            id="desiredMarginSlider"
+            min="0"
+            max="95"
+            step="1"
+            value="40"
+            data-sync-with="desiredMarginPercent"
+            aria-label="Target margin slider"
+          />
+          <div class="range-scale" aria-hidden="true">
+            <span>0%</span>
+            <span>50%</span>
+            <span>95%</span>
+          </div>
+        </div>
+      </div>
+
+      <ul id="form-errors" class="error-list" aria-live="polite"></ul>
+
+      <button type="button" class="copy-link" data-copy-link aria-live="polite">Copy link to this result</button>
+    </form>
+
+    <section class="answer" aria-label="Result" aria-live="polite">
+      <div class="answer-head">
+        <span class="answer-label">Charge at least</span>
+        <strong class="answer-value" id="answer-value">$100.00</strong>
+        <p class="answer-sentence" id="answer-sentence">
+          per unit to keep 40.0% of the price as margin.
+        </p>
+      </div>
+
+      <div class="equation" data-label="Why">
+        <span class="eq-term">
+          <span class="eq-value" id="eq-cost">$60.00</span>
+          <span class="eq-name">Unit cost</span>
+        </span>
+        <span class="eq-op" aria-hidden="true">÷</span>
+        <span class="visually-hidden">divided by</span>
+        <span class="eq-term">
+          <span class="eq-value" id="eq-divisor">0.600</span>
+          <span class="eq-name">1 − your margin</span>
+        </span>
+        <span class="eq-op" aria-hidden="true">=</span>
+        <span class="visually-hidden">equals</span>
+        <span class="eq-term is-result">
+          <span class="eq-value" id="eq-price">$100.00</span>
+          <span class="eq-name">Price to charge</span>
+        </span>
+      </div>
+
+        <p class="answer-implication" id="answer-implication">
+          That leaves <strong>$40.00</strong> per unit before fixed costs. Discounting
+          below <strong>$100.00</strong> comes straight out of that.
+        </p>
+      <div class="answer-metrics">
+        <div class="metric">
+          <span class="metric-label">Profit per unit</span>
+          <span class="metric-value" id="metric-profit">$40.00</span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">Same as markup</span>
+          <span class="metric-value" id="metric-markup">66.7%</span>
+        </div>
+      </div>
+      <div class="scenarios">
+        <h2>If you aimed differently</h2>
+        <ul class="scenario-list">
+          <li>
+            <span id="scenario-up-label">5 points more margin (45.0%)</span>
+            <span class="scenario-value" id="scenario-up">$109.09</span>
+          </li>
+          <li>
+            <span id="scenario-down-label">5 points less margin (35.0%)</span>
+            <span class="scenario-value" id="scenario-down">$92.31</span>
+          </li>
+        </ul>
+      </div>
+    </section>
+  </div>
+
+  <section class="band">
+    <h2 class="band-label">Price breakdown</h2>
+    <figure class="viz">
+    <div class="viz-title">How that price breaks down</div>
+    <div class="split-bar" aria-hidden="true">
+      <div class="split-part is-cost" id="viz-cost" style={`width: ${split.costPercent}%`}>
+        <span class="split-amount" id="viz-cost-amount">{formatCurrency(defaults.unitCost)}</span>
+        <span class="split-name" id="viz-cost-name">Your cost · 60.0%</span>
+      </div>
+      <div class="split-part is-keep" id="viz-profit" style={`width: ${split.contributionPercent}%`}>
+        <span class="split-amount" id="viz-profit-amount">
+          {formatCurrency(seed.data.requiredSellingPrice - defaults.unitCost)}
+        </span>
+        <span class="split-name" id="viz-profit-name">Your margin · 40.0%</span>
+      </div>
+    </div>
+    <div class="split-scale" aria-hidden="true">
+      <span>$0</span>
+      <span>Price to charge <strong id="viz-price">{formatCurrency(seed.data.requiredSellingPrice)}</strong></span>
+    </div>
+    <figcaption id="viz-caption">
+      A <strong>$60.00</strong> cost has to be sold at <strong>$100.00</strong> for the
+      teal slice — your margin — to be <strong>40.0%</strong> of the bar.
+    </figcaption>
+    </figure>
+  </section>
+
+  <section class="band takeaways">
+    <h2 class="band-label">What this price means</h2>
+    <ul class="takeaway-list">
+      <li>
+        Charge <strong class="figure is-positive" id="take-price">$100.00</strong> and you
+        keep <strong class="figure" id="take-profit">$40.00</strong> per unit before fixed costs.
+      </li>
+      <li>
+        Adding your target percentage to cost instead would price this at
+        <strong class="figure" id="take-naive">$84.00</strong> — a real margin of only
+        <strong class="figure is-negative" id="take-naive-margin">28.6%</strong>.
+      </li>
+      <li>
+        Each extra 5 points of margin has a price: aiming for
+        <strong class="figure" id="take-higher-margin">45.0%</strong> would mean charging
+        <strong class="figure" id="take-higher-price">$109.09</strong>.
+      </li>
+    </ul>
+  </section>
+
+  <section class="band">
+    <h2 class="band-label">Selling price formula</h2>
+    <details class="show-math" open>
+    <summary><span class="chevron" aria-hidden="true"></span>Formula and worked example</summary>
+    <div class="show-math-body">
+      <code class="formula">price = unit cost ÷ (1 − target margin ÷ 100)</code>
+      <p>
+        Dividing rather than adding is the whole point: margin is measured against the
+        price you're solving for, not against cost. The result is also converted to the
+        equivalent markup using the same formula as the
+        <a href="/markup-vs-margin">markup vs. margin calculator</a>.
+      </p>
+      <p>
+        The price is shown to the nearest cent, so the margin you actually realize can
+        differ from the target by a fraction of a percent.
+      </p>
+
+      <h3>Worked example</h3>
+      <dl class="example-rows">
+        <div class="example-row"><dt>Unit cost</dt><dd>$60</dd></div>
+        <div class="example-row"><dt>Target margin</dt><dd>40%</dd></div>
+        <div class="example-row"><dt>Calculation</dt><dd>$60 ÷ 0.60</dd></div>
+        <div class="example-row is-result"><dt>Price to charge</dt><dd>$100.00</dd></div>
+        <div class="example-row"><dt>Check</dt><dd>$40 ÷ $100 = 40%</dd></div>
+      </dl>
+    </div>
+    </details>
+  </section>
+
+  <AdSlot
+    enabled={siteConfig.ads.enabled}
+    clientId={siteConfig.ads.clientId}
+    slotId={siteConfig.ads.inContentSlotId}
+    height="250px"
+  />
+
+  <section class="band">
+    <h2 class="band-label">Selling price FAQ</h2>
+    <FaqList faqs={faqs} />
+  </section>
+
+  <MoreTools hrefs={["/markup-margin-chart", "/price-increase-calculator", "/discount-calculator"]} />
+
+  <section class="band">
+    <div class="band-label">Next</div>
+    <NextStep
+    href="/break-even"
+    title="Break-Even Calculator"
+    description="Now that you have a price, find out how many units you need to sell."
+    />
+  </section>
+</Layout>
+
+<script>
+  import { calculateSellingPrice } from "@repo/calculators/selling-price";
+  import { formatCurrency, formatPercentValue, priceSplitLayout, readNumericField, wireCalculatorForm } from "@repo/ui";
+
+  const form = document.getElementById("calc-form") as HTMLFormElement;
+  const errorsEl = document.getElementById("form-errors") as HTMLUListElement;
+  const byId = (id: string) => document.getElementById(id)!;
+
+  const out = {
+    value: byId("answer-value"),
+    sentence: byId("answer-sentence"),
+    profit: byId("metric-profit"),
+    markup: byId("metric-markup"),
+    vizPrice: byId("viz-price"),
+    cost: byId("viz-cost"),
+    costAmount: byId("viz-cost-amount"),
+    costName: byId("viz-cost-name"),
+    profitBar: byId("viz-profit"),
+    profitAmount: byId("viz-profit-amount"),
+    profitName: byId("viz-profit-name"),
+    scenarioUpLabel: byId("scenario-up-label"),
+    scenarioUp: byId("scenario-up"),
+    scenarioDownLabel: byId("scenario-down-label"),
+    scenarioDown: byId("scenario-down"),
+    takePrice: byId("take-price"),
+    takeProfit: byId("take-profit"),
+    takeNaive: byId("take-naive"),
+    takeNaiveMargin: byId("take-naive-margin"),
+    takeHigherMargin: byId("take-higher-margin"),
+    takeHigherPrice: byId("take-higher-price"),
+  };
+
+  const captionStrongs = byId("viz-caption").querySelectorAll("strong");
+  const implicationStrongs = byId("answer-implication").querySelectorAll("strong");
+  const value = (id: string) => readNumericField(id);
+
+  function readInputs() {
+    return {
+      unitCost: value("unitCost"),
+      desiredMarginPercent: value("desiredMarginPercent"),
+    };
+  }
+
+  wireCalculatorForm({
+    form,
+    errorsEl,
+    calculatorId: "selling-price",
+    calculate: calculateSellingPrice,
+    readInputs,
+    renderResult(data) {
+      const input = readInputs();
+
+      // Equation terms, from the same values rendered everywhere else.
+      byId("eq-cost").textContent = formatCurrency(input.unitCost);
+      byId("eq-divisor").textContent = (1 - input.desiredMarginPercent / 100).toFixed(3);
+      byId("eq-price").textContent = formatCurrency(data.requiredSellingPrice);
+      const price = data.requiredSellingPrice;
+      const grossProfit = price - input.unitCost;
+      const split = priceSplitLayout(price, input.unitCost);
+
+      out.value.textContent = formatCurrency(price);
+      out.sentence.textContent = `per unit to keep ${formatPercentValue(
+        input.desiredMarginPercent
+      )} of the price as margin.`;
+      out.profit.textContent = formatCurrency(grossProfit);
+      out.markup.textContent = formatPercentValue(data.equivalentMarkupPercent);
+
+      out.vizPrice.textContent = formatCurrency(price);
+      out.cost.style.width = `${split.costPercent}%`;
+      out.profitBar.style.width = `${split.contributionPercent}%`;
+      out.costAmount.textContent = formatCurrency(input.unitCost);
+      out.costName.textContent = `Your cost · ${formatPercentValue(
+        100 - input.desiredMarginPercent
+      )}`;
+      out.profitAmount.textContent = formatCurrency(grossProfit);
+      out.profitName.textContent = `Your margin · ${formatPercentValue(
+        input.desiredMarginPercent
+      )}`;
+
+      implicationStrongs[0].textContent = formatCurrency(grossProfit);
+      implicationStrongs[1].textContent = formatCurrency(price);
+
+      // Scenarios: five points of margin either way.
+      const up = Math.min(input.desiredMarginPercent + 5, 99);
+      const down = Math.max(input.desiredMarginPercent - 5, 0);
+      const upResult = calculateSellingPrice({ ...input, desiredMarginPercent: up });
+      const downResult = calculateSellingPrice({ ...input, desiredMarginPercent: down });
+      out.scenarioUpLabel.textContent = `5 points more margin (${formatPercentValue(up)})`;
+      out.scenarioUp.textContent = upResult.ok
+        ? formatCurrency(upResult.data.requiredSellingPrice)
+        : "—";
+      out.scenarioDownLabel.textContent = `5 points less margin (${formatPercentValue(down)})`;
+      out.scenarioDown.textContent = downResult.ok
+        ? formatCurrency(downResult.data.requiredSellingPrice)
+        : "—";
+
+      captionStrongs[0].textContent = formatCurrency(input.unitCost);
+      captionStrongs[1].textContent = formatCurrency(price);
+      captionStrongs[2].textContent = formatPercentValue(input.desiredMarginPercent);
+
+      // Takeaways
+      out.takePrice.textContent = formatCurrency(price);
+      out.takeProfit.textContent = formatCurrency(grossProfit);
+
+      // The common mistake: adding the percentage to cost instead of dividing.
+      const naivePrice = input.unitCost * (1 + input.desiredMarginPercent / 100);
+      const naiveMargin = naivePrice > 0 ? ((naivePrice - input.unitCost) / naivePrice) * 100 : 0;
+      out.takeNaive.textContent = formatCurrency(naivePrice);
+      out.takeNaiveMargin.textContent = formatPercentValue(naiveMargin);
+
+      // What another five points of margin would cost the customer.
+      const higherMargin = Math.min(input.desiredMarginPercent + 5, 99);
+      const higher = calculateSellingPrice({ ...input, desiredMarginPercent: higherMargin });
+      out.takeHigherMargin.textContent = formatPercentValue(higherMargin);
+      out.takeHigherPrice.textContent = higher.ok
+        ? formatCurrency(higher.data.requiredSellingPrice)
+        : "—";
+    },
+  });
+</script>

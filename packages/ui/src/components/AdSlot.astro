@@ -1,0 +1,47 @@
+---
+/**
+ * Renders one manual AdSense unit, and renders NOTHING AT ALL otherwise.
+ *
+ * An inactive slot used to reserve its height anyway, which left a large empty
+ * rectangle in the middle of every page. Reserving space only pays for itself
+ * once an ad will actually fill it, so the reserve happens only when the slot
+ * is live.
+ *
+ * CLS when ads are switched on: the slot reserves `height` up front via
+ * min-height and the AdSense <ins> fills that box, so the unit does not push
+ * content down as it loads.
+ *
+ * The adsbygoogle.js loader lives in the page <head> (see AdsHead.astro), once
+ * per page, so a page with several slots doesn't load it several times and
+ * Auto ads work with no slot at all. Without a numeric slot id this renders
+ * nothing — Auto ads, if enabled in AdSense, place units themselves.
+ */
+interface Props {
+  enabled: boolean;
+  clientId?: string;
+  slotId?: string;
+  /** Reserved height, matched to the ad format you plan to use. */
+  height?: string;
+}
+
+const { enabled, clientId, slotId, height = "280px" } = Astro.props;
+const active = enabled && Boolean(clientId) && Boolean(slotId);
+---
+
+{
+  active && (
+    <div class="ad-slot" data-enabled="true" style={`min-height: ${height};`}>
+      <ins
+        class="adsbygoogle"
+        style="display:block; width:100%; height:100%;"
+        data-ad-client={clientId}
+        data-ad-slot={slotId}
+        data-ad-format="auto"
+        data-full-width-responsive="true"
+      />
+      <script is:inline>
+        (window.adsbygoogle = window.adsbygoogle || []).push({});
+      </script>
+    </div>
+  )
+}

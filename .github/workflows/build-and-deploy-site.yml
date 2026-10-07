@@ -1,0 +1,74 @@
+name: Build and deploy one site
+
+on:
+  workflow_call:
+    inputs:
+      site-filter:
+        description: "pnpm --filter target, e.g. site-pricing-calculators"
+        required: true
+        type: string
+      site-dist-path:
+        description: "Build output directory, e.g. sites/pricing-calculators/dist"
+        required: true
+        type: string
+      cloudflare-project-name:
+        description: "Cloudflare Pages project name to deploy to"
+        required: true
+        type: string
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm --filter ${{ inputs.site-filter }}... run typecheck
+
+      - name: Unit tests (shared packages)
+        run: pnpm --filter ${{ inputs.site-filter }}... --filter=./packages/** run test
+
+      # Builds here never see Cloudflare dashboard variables: when deploying
+      # from Actions, set these as GitHub repository variables (Settings →
+      # Secrets and variables → Actions → Variables). Without
+      # PUBLIC_SITE_DOMAIN the deployed site is forced noindex.
+      - name: Build
+        run: pnpm --filter ${{ inputs.site-filter }} run build
+        env:
+          PUBLIC_SITE_DOMAIN: ${{ github.event_name == 'push' && vars.PUBLIC_SITE_DOMAIN || '' }}
+          PUBLIC_GA4_MEASUREMENT_ID: ${{ vars.PUBLIC_GA4_MEASUREMENT_ID }}
+          PUBLIC_CONTACT_EMAIL: ${{ vars.PUBLIC_CONTACT_EMAIL }}
+          PUBLIC_ORGANIZATION_NAME: ${{ vars.PUBLIC_ORGANIZATION_NAME }}
+
+      - name: Check for Cloudflare credentials
+        id: has-secrets
+        run: |
+          if [ -n "${{ secrets.CLOUDFLARE_API_TOKEN }}" ] && [ -n "${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Deploy to Cloudflare Pages
+        if: steps.has-secrets.outputs.ready == 'true'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy ${{ inputs.site-dist-path }} --project-name=${{ inputs.cloudflare-project-name }}
+
+      - name: Skip deploy (no Cloudflare credentials configured)
+        if: steps.has-secrets.outputs.ready != 'true'
+        run: echo "CLOUDFLARE_API_TOKEN/CLOUDFLARE_ACCOUNT_ID not set — build verified, deploy skipped. See docs/deployment.md."

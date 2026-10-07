@@ -1,0 +1,16 @@
+---
+import RelatedTools from "@repo/ui/components/RelatedTools.astro";
+import { getTool } from "../tools";
+
+interface Props {
+  /** Paths of the tools to link to, in display order. */
+  hrefs: string[];
+}
+
+const tools = Astro.props.hrefs.map((href) => {
+  const tool = getTool(href);
+  return { title: tool.name, href: tool.href, description: tool.summary };
+});
+---
+
+<RelatedTools tools={tools} heading="Related calculators" />

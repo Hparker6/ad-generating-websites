@@ -1,0 +1,90 @@
+---
+import { buildMeta, hasPlaceholderOrganization } from "@repo/seo";
+import Layout from "@repo/ui/components/Layout.astro";
+import { siteConfig } from "../../site.config";
+import { footerColumns, footerTagline, navItems } from "../site-nav";
+
+const meta = buildMeta(siteConfig, {
+  title: "About",
+  description: `Why ${siteConfig.siteName} exists, how its calculators work, and what they don't claim to do.`,
+  path: "/about",
+});
+
+const identityIsPlaceholder = hasPlaceholderOrganization(siteConfig);
+---
+
+<Layout
+  config={siteConfig}
+  meta={meta}
+  navItems={navItems}
+  footerColumns={footerColumns}
+  footerTagline={footerTagline}
+>
+  <div class="page-header">
+    <h1 class="page-title">About this site</h1>
+    <p class="lede">
+      A small set of free calculators for the pricing questions small businesses
+      run into constantly.
+    </p>
+  </div>
+
+  <section class="section prose">
+    <h2 class="section-title">What it does</h2>
+    <p>
+      {siteConfig.siteName} covers where your break-even point sits, what you
+      need to sell to hit a profit goal, how much margin you're actually making,
+      and what you should charge — plus focused tools for discounts, price
+      increases, restaurant menu pricing, and freelance rates.
+    </p>
+    <p>
+      Every calculator uses standard, widely-taught cost-accounting formulas —
+      the same ones in any introductory small-business finance course. Each page
+      shows the formula and a worked example so you can verify the math yourself
+      rather than trusting a number from a black box.
+    </p>
+  </section>
+
+  <section class="section prose">
+    <h2 class="section-title">Who runs it</h2>
+    {
+      identityIsPlaceholder ? (
+        <p>
+          {siteConfig.siteName} is an independent project. It isn't affiliated with
+          any accounting firm, software vendor, or bank, and nothing on the site is
+          sponsored.
+        </p>
+      ) : (
+        <p>
+          {siteConfig.siteName} is run by {siteConfig.organizationName}. It isn't
+          affiliated with any accounting firm, software vendor, or bank, and nothing
+          on the site is sponsored.
+        </p>
+      )
+    }
+    <p>
+      Spotted a mistake or want another calculator? <a href="/contact">Get in touch</a>.
+    </p>
+  </section>
+
+  <section class="section prose">
+    <h2 class="section-title">What it is not</h2>
+    <p>
+      This is not financial, legal, or tax advice, and it claims no expertise
+      beyond implementing standard formulas correctly. The calculators are only
+      as accurate as the costs and prices you enter, and they don't model taxes,
+      financing, inventory timing, or anything outside basic fixed and variable
+      cost accounting. For decisions with real money at stake, pair this with an
+      accountant who knows your business.
+    </p>
+  </section>
+
+  <section class="section prose">
+    <h2 class="section-title">How your data is handled</h2>
+    <p>
+      Every calculation runs in your browser. Nothing you type into a form —
+      costs, prices, margins, profit goals — is sent to a server or included in
+      analytics. See the <a href="/privacy">privacy policy</a> for what limited,
+      aggregated analytics may be collected.
+    </p>
+  </section>
+</Layout>

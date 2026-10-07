@@ -1,0 +1,483 @@
+---
+import { calculateBreakEven } from "@repo/calculators/break-even";
+import { calculateTargetProfit } from "@repo/calculators/target-profit";
+import { buildMeta } from "@repo/seo";
+import { formatCurrency, formatNumber, targetProfitLayout } from "@repo/ui";
+import AdSlot from "@repo/ui/components/AdSlot.astro";
+import FaqList from "@repo/ui/components/FaqList.astro";
+import Layout from "@repo/ui/components/Layout.astro";
+import NextStep from "@repo/ui/components/NextStep.astro";
+import { siteConfig } from "../../site.config";
+import MoreTools from "../components/MoreTools.astro";
+import { footerColumns, footerTagline, navItems } from "../site-nav";
+import { formatUpdated, getTool, toolStructuredData } from "../tools";
+
+const tool = getTool("/target-profit");
+
+const meta = buildMeta(siteConfig, {
+  title: "Target Profit Calculator: Units to Hit a Profit Goal",
+  description:
+    "Calculate exactly how many units you need to sell — and the revenue that represents — to hit a specific profit goal.",
+  path: "/target-profit",
+});
+
+const defaults = {
+  fixedCosts: 10000,
+  pricePerUnit: 50,
+  variableCostPerUnit: 30,
+  desiredProfit: 4000,
+};
+const seed = calculateTargetProfit(defaults);
+const seedBreakEven = calculateBreakEven(defaults);
+if (!seed.ok || !seedBreakEven.ok) throw new Error("Default target-profit inputs must be valid");
+const layout = targetProfitLayout({
+  fixedCosts: defaults.fixedCosts,
+  desiredProfit: defaults.desiredProfit,
+  breakEvenUnits: seedBreakEven.data.breakEvenUnits,
+  requiredUnits: seed.data.requiredUnits,
+});
+
+const presets = [
+  {
+    label: "Small business",
+    values: { fixedCosts: 10000, pricePerUnit: 50, variableCostPerUnit: 30, desiredProfit: 4000 },
+  },
+  {
+    label: "Retail product",
+    values: { fixedCosts: 4000, pricePerUnit: 25, variableCostPerUnit: 15, desiredProfit: 2000 },
+  },
+  {
+    label: "Service business",
+    values: { fixedCosts: 6000, pricePerUnit: 500, variableCostPerUnit: 150, desiredProfit: 5000 },
+  },
+];
+
+const faqs = [
+  {
+    question: "How is this different from the break-even calculator?",
+    answer:
+      "Break-even finds the volume where profit is exactly zero. This calculator finds the volume needed to reach a profit goal above zero, by treating your desired profit the same way as an extra fixed cost to cover.",
+  },
+  {
+    question: "What if I set the desired profit to $0?",
+    answer:
+      "You'll get the same answer as the break-even calculator — required units will equal your break-even point, since reaching $0 profit is exactly breaking even.",
+  },
+  {
+    question: "Why does it reject some combinations of price and cost?",
+    answer:
+      "If your variable cost per unit is equal to or greater than your selling price, each sale contributes nothing (or a loss) toward fixed costs or profit. No volume of sales can reach a profit target in that situation.",
+  },
+  {
+    question: "Does this account for taxes?",
+    answer:
+      "No — this is a simple contribution-margin model based on the costs and price you enter. The profit figure it targets is operating profit before tax, and it doesn't model financing costs or anything outside fixed and variable costs.",
+  },
+];
+
+const structuredData = toolStructuredData(tool, meta.description);
+---
+
+<Layout
+  config={siteConfig}
+  meta={meta}
+  structuredData={structuredData}
+  navItems={navItems}
+  footerColumns={footerColumns}
+  footerTagline={footerTagline}
+>
+  <div class="page-header">
+    <h1 class="page-title">{tool.name}</h1>
+    <p class="lede">Units needed = (fixed costs + profit goal) ÷ (price − variable cost per unit). Enter your numbers to see the sales volume and revenue that reach your profit goal.</p>
+    <p class="page-meta">Updated <time datetime={tool.updated}>{formatUpdated(tool.updated)}</time> · Standard cost-accounting formulas, shown in full below.</p>
+  </div>
+
+  <div class="calc-grid">
+    <form id="calc-form" class="panel" novalidate>
+      <div class="preset-row">
+        <span class="preset-label">Try an example</span>
+        {
+          presets.map((preset, index) => (
+            <button
+              type="button"
+              class="preset"
+              data-preset={JSON.stringify(preset.values)}
+              aria-pressed={index === 0 ? "true" : "false"}
+            >
+              {preset.label}
+            </button>
+          ))
+        }
+      </div>
+
+      <div class="field-stack">
+        <div class="field">
+          <label for="desiredProfit">Profit goal</label>
+          <div class="input-row">
+            <button type="button" class="stepper" data-step-for="desiredProfit" data-step-delta="-500" aria-label="Decrease profit goal by 500">−</button>
+            <div class="input-affix">
+              <span class="affix affix-start" aria-hidden="true">$</span>
+              <input type="number" id="desiredProfit" name="desiredProfit" min="0" max="1000000000" step="100" value="4000" inputmode="decimal" aria-describedby="desiredProfit-hint" />
+            </div>
+            <button type="button" class="stepper" data-step-for="desiredProfit" data-step-delta="500" aria-label="Increase profit goal by 500">+</button>
+          </div>
+          <span class="field-hint" id="desiredProfit-hint">Profit before tax, for one period.</span>
+        </div>
+
+        <div class="field">
+          <label for="fixedCosts">Fixed costs</label>
+          <div class="input-row">
+            <button type="button" class="stepper" data-step-for="fixedCosts" data-step-delta="-500" aria-label="Decrease fixed costs by 500">−</button>
+            <div class="input-affix">
+              <span class="affix affix-start" aria-hidden="true">$</span>
+              <input type="number" id="fixedCosts" name="fixedCosts" min="0" max="100000000" step="100" value="10000" inputmode="decimal" />
+            </div>
+            <button type="button" class="stepper" data-step-for="fixedCosts" data-step-delta="500" aria-label="Increase fixed costs by 500">+</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="pricePerUnit">Price per unit</label>
+          <div class="input-row">
+            <button type="button" class="stepper" data-step-for="pricePerUnit" data-step-delta="-1" aria-label="Decrease price by 1">−</button>
+            <div class="input-affix">
+              <span class="affix affix-start" aria-hidden="true">$</span>
+              <input type="number" id="pricePerUnit" name="pricePerUnit" min="0.01" max="1000000" step="0.01" value="50" inputmode="decimal" />
+            </div>
+            <button type="button" class="stepper" data-step-for="pricePerUnit" data-step-delta="1" aria-label="Increase price by 1">+</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="variableCostPerUnit">Cost per unit</label>
+          <div class="input-row">
+            <button type="button" class="stepper" data-step-for="variableCostPerUnit" data-step-delta="-1" aria-label="Decrease cost per unit by 1">−</button>
+            <div class="input-affix">
+              <span class="affix affix-start" aria-hidden="true">$</span>
+              <input type="number" id="variableCostPerUnit" name="variableCostPerUnit" min="0" max="1000000" step="0.01" value="30" inputmode="decimal" />
+            </div>
+            <button type="button" class="stepper" data-step-for="variableCostPerUnit" data-step-delta="1" aria-label="Increase cost per unit by 1">+</button>
+          </div>
+        </div>
+      </div>
+
+      <ul id="form-errors" class="error-list" aria-live="polite"></ul>
+
+      <button type="button" class="copy-link" data-copy-link aria-live="polite">Copy link to this result</button>
+    </form>
+
+    <section class="answer" aria-label="Result" aria-live="polite">
+      <div class="answer-head">
+        <span class="answer-label">Units to hit your goal</span>
+        <strong class="answer-value" id="answer-value">700</strong>
+        <p class="answer-sentence" id="answer-sentence">
+          units per period — 200 beyond break-even.
+        </p>
+      </div>
+
+      <div class="equation" data-label="Why">
+        <span class="eq-term">
+          <span class="eq-value" id="eq-need">$14,000</span>
+          <span class="eq-name">Costs + profit goal</span>
+        </span>
+        <span class="eq-op" aria-hidden="true">÷</span>
+        <span class="visually-hidden">divided by</span>
+        <span class="eq-term">
+          <span class="eq-value" id="eq-cm">$20.00</span>
+          <span class="eq-name">Kept per unit</span>
+        </span>
+        <span class="eq-op" aria-hidden="true">=</span>
+        <span class="visually-hidden">equals</span>
+        <span class="eq-term is-result">
+          <span class="eq-value" id="eq-units">700</span>
+          <span class="eq-name">Units to hit the goal</span>
+        </span>
+      </div>
+
+        <p class="answer-implication" id="answer-implication">
+          That's <strong>40% more volume</strong> than simply breaking even, and the
+          profit only starts accumulating after unit <strong>500</strong>.
+        </p>
+      <div class="answer-metrics">
+        <div class="metric">
+          <span class="metric-label">Sales needed</span>
+          <span class="metric-value" id="metric-revenue">$35,000.00</span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">Break-even first</span>
+          <span class="metric-value" id="metric-be">500</span>
+        </div>
+      </div>
+      <div class="scenarios">
+        <h2>If something changed</h2>
+        <ul class="scenario-list">
+          <li>
+            <span id="scenario-price-label">Price up 10% to $55.00</span>
+            <span class="scenario-value" id="scenario-price">560 units</span>
+          </li>
+          <li>
+            <span id="scenario-fixed-label">Fixed costs down 10% to $9,000</span>
+            <span class="scenario-value" id="scenario-fixed">650 units</span>
+          </li>
+        </ul>
+      </div>
+    </section>
+  </div>
+
+  <section class="band">
+    <h2 class="band-label">Target profit chart</h2>
+    <figure class="viz">
+    <div class="viz-title">Every unit from zero to your goal</div>
+
+    <div class="milestone">
+      <div class="milestone-track" aria-hidden="true">
+        <div class="milestone-segment is-cover" id="ms-cover" style={`width: ${layout.breakEvenUnitsPercent}%`}>
+          <span id="ms-cover-text">
+            {formatNumber(Math.ceil(seedBreakEven.data.breakEvenUnits))} covering costs
+          </span>
+        </div>
+        <div class="milestone-segment is-earn" id="ms-earn" style={`width: ${layout.profitUnitsPercent}%`}>
+          <span id="ms-earn-text">
+            {formatNumber(Math.ceil(seed.data.requiredUnits) - Math.ceil(seedBreakEven.data.breakEvenUnits))} earning profit
+          </span>
+        </div>
+      </div>
+      <div class="milestone-scale" aria-hidden="true">
+        <span class="milestone-tick is-start">0 units</span>
+        <span class="milestone-tick is-end"><strong id="ms-goal">700</strong> goal</span>
+      </div>
+    </div>
+
+    <div class="viz-secondary">
+      <div class="stack-group-label">
+        <span>What that volume has to cover</span>
+        <span id="viz-cover-total">{formatCurrency(defaults.fixedCosts + defaults.desiredProfit)}</span>
+      </div>
+      <div class="stack-bar" aria-hidden="true">
+        <div class="stack-segment is-fixed" id="viz-fixed" style={`width: ${layout.fixedCostsPercent}%`}>
+          <span id="viz-fixed-text">{formatCurrency(defaults.fixedCosts)}</span>
+        </div>
+        <div class="stack-segment is-profit" id="viz-profit" style={`width: ${layout.desiredProfitPercent}%`}>
+          <span id="viz-profit-text">{formatCurrency(defaults.desiredProfit)}</span>
+        </div>
+      </div>
+      <div class="stack-key">
+        <span><i class="key-dot is-fixed"></i>Fixed costs</span>
+        <span><i class="key-dot is-profit"></i>Profit goal</span>
+      </div>
+    </div>
+
+    <figcaption id="viz-caption">
+      The first <strong>500 units</strong> only pay off fixed costs. Profit starts on
+      unit 501, and the last <strong>200</strong> are what you actually take home.
+    </figcaption>
+    </figure>
+  </section>
+
+  <section class="band takeaways">
+    <h2 class="band-label">Target profit analysis</h2>
+    <ul class="takeaway-list">
+      <li>
+        Hitting <strong class="figure" id="take-goal">$4,000</strong> of profit takes
+        <strong class="figure is-positive" id="take-units">700 units</strong>, or about
+        <strong class="figure" id="take-revenue">$35K</strong> in sales.
+      </li>
+      <li>
+        Only <strong class="figure" id="take-extra">200 units</strong> of that is profit-earning
+        volume — the rest just covers costs.
+      </li>
+      <li>
+        At <strong class="figure" id="take-cm">$20.00</strong> of contribution per sale, every
+        extra <strong class="figure">100 units</strong> adds
+        <strong class="figure is-positive" id="take-per-100">$2,000</strong> of profit.
+      </li>
+    </ul>
+  </section>
+
+  <section class="band">
+    <h2 class="band-label">Target profit formula</h2>
+    <details class="show-math" open>
+    <summary><span class="chevron" aria-hidden="true"></span>Formula and worked example</summary>
+    <div class="show-math-body">
+      <p>
+        Your profit goal is treated as an extra amount to cover on top of fixed costs,
+        paid down by each unit's contribution margin.
+      </p>
+      <code class="formula">contribution margin = price − variable cost per unit</code>
+      <code class="formula">units needed = (fixed costs + profit goal) ÷ contribution margin</code>
+      <p>
+        Revenue needed is that unit count times your price, measured at the exact
+        unrounded volume. The displayed count rounds up, since you can't sell part of a unit.
+      </p>
+
+      <h3>Worked example</h3>
+      <dl class="example-rows">
+        <div class="example-row"><dt>Fixed costs</dt><dd>$10,000</dd></div>
+        <div class="example-row"><dt>Profit goal</dt><dd>$4,000</dd></div>
+        <div class="example-row"><dt>Contribution margin</dt><dd>$50 − $30 = $20</dd></div>
+        <div class="example-row"><dt>Break-even</dt><dd>500 units</dd></div>
+        <div class="example-row is-result"><dt>To hit the goal</dt><dd>700 units · $35,000</dd></div>
+      </dl>
+    </div>
+    </details>
+  </section>
+
+  <AdSlot
+    enabled={siteConfig.ads.enabled}
+    clientId={siteConfig.ads.clientId}
+    slotId={siteConfig.ads.inContentSlotId}
+    height="250px"
+  />
+
+  <section class="band">
+    <h2 class="band-label">Target profit FAQ</h2>
+    <FaqList faqs={faqs} />
+  </section>
+
+  <MoreTools hrefs={["/break-even", "/freelance-hourly-rate", "/discount-calculator"]} />
+
+  <section class="band">
+    <div class="band-label">Next</div>
+    <NextStep
+    href="/contribution-margin"
+    title="Contribution Margin Calculator"
+    description="Both answers above hinge on contribution per sale. Check it on a single product."
+    />
+  </section>
+</Layout>
+
+<script>
+  import { calculateBreakEven } from "@repo/calculators/break-even";
+  import { calculateTargetProfit } from "@repo/calculators/target-profit";
+  import {
+    formatCompactCurrency,
+    formatCurrency,
+    formatNumber,
+    targetProfitLayout,
+    readNumericField,
+    wireCalculatorForm,
+  } from "@repo/ui";
+
+  const form = document.getElementById("calc-form") as HTMLFormElement;
+  const errorsEl = document.getElementById("form-errors") as HTMLUListElement;
+  const byId = (id: string) => document.getElementById(id)!;
+
+  const out = {
+    value: byId("answer-value"),
+    sentence: byId("answer-sentence"),
+    revenue: byId("metric-revenue"),
+    be: byId("metric-be"),
+    coverTotal: byId("viz-cover-total"),
+    fixed: byId("viz-fixed"),
+    fixedText: byId("viz-fixed-text"),
+    profit: byId("viz-profit"),
+    profitText: byId("viz-profit-text"),
+    msCover: byId("ms-cover"),
+    msCoverText: byId("ms-cover-text"),
+    msEarn: byId("ms-earn"),
+    msEarnText: byId("ms-earn-text"),
+    msGoal: byId("ms-goal"),
+    scenarioPriceLabel: byId("scenario-price-label"),
+    scenarioPrice: byId("scenario-price"),
+    scenarioFixedLabel: byId("scenario-fixed-label"),
+    scenarioFixed: byId("scenario-fixed"),
+    takeGoal: byId("take-goal"),
+    takeUnits: byId("take-units"),
+    takeRevenue: byId("take-revenue"),
+    takeExtra: byId("take-extra"),
+    takeCm: byId("take-cm"),
+    takePer100: byId("take-per-100"),
+  };
+
+  const captionStrongs = byId("viz-caption").querySelectorAll("strong");
+  const implicationStrongs = byId("answer-implication").querySelectorAll("strong");
+  const value = (id: string) => readNumericField(id);
+
+  function readInputs() {
+    return {
+      fixedCosts: value("fixedCosts"),
+      pricePerUnit: value("pricePerUnit"),
+      variableCostPerUnit: value("variableCostPerUnit"),
+      desiredProfit: value("desiredProfit"),
+    };
+  }
+
+  wireCalculatorForm({
+    form,
+    errorsEl,
+    calculatorId: "target-profit",
+    calculate: calculateTargetProfit,
+    readInputs,
+    renderResult(data) {
+      const input = readInputs();
+
+      // Equation terms, from the same values rendered everywhere else.
+      const totalToCover = input.fixedCosts + input.desiredProfit;
+      byId("eq-need").textContent = Number.isInteger(totalToCover)
+        ? `$${formatNumber(totalToCover)}`
+        : formatCurrency(totalToCover);
+      byId("eq-cm").textContent = formatCurrency(data.contributionMarginPerUnit);
+      byId("eq-units").textContent = formatNumber(Math.ceil(data.requiredUnits));
+      const requiredUnits = Math.ceil(data.requiredUnits);
+      const breakEven = calculateBreakEven(input);
+      const breakEvenExact = breakEven.ok ? breakEven.data.breakEvenUnits : 0;
+      const breakEvenUnits = Math.ceil(breakEvenExact);
+      const extraUnits = Math.max(requiredUnits - breakEvenUnits, 0);
+
+      out.value.textContent = formatNumber(requiredUnits);
+      out.sentence.textContent = `units per period — ${formatNumber(
+        extraUnits
+      )} beyond break-even.`;
+      out.revenue.textContent = formatCurrency(data.requiredRevenue);
+      out.be.textContent = formatNumber(breakEvenUnits);
+
+      const layout = targetProfitLayout({
+        fixedCosts: input.fixedCosts,
+        desiredProfit: input.desiredProfit,
+        breakEvenUnits: breakEvenExact,
+        requiredUnits: data.requiredUnits,
+      });
+
+      out.coverTotal.textContent = formatCurrency(input.fixedCosts + input.desiredProfit);
+      out.fixed.style.width = `${layout.fixedCostsPercent}%`;
+      out.fixedText.textContent = formatCurrency(input.fixedCosts);
+      out.profit.style.width = `${layout.desiredProfitPercent}%`;
+      out.profitText.textContent = formatCurrency(input.desiredProfit);
+
+      out.msCover.style.width = `${layout.breakEvenUnitsPercent}%`;
+      out.msCoverText.textContent = `${formatNumber(breakEvenUnits)} covering costs`;
+      out.msEarn.style.width = `${layout.profitUnitsPercent}%`;
+      out.msEarnText.textContent = `${formatNumber(extraUnits)} earning profit`;
+      out.msGoal.textContent = formatNumber(requiredUnits);
+
+      captionStrongs[0].textContent = `${formatNumber(breakEvenUnits)} units`;
+      captionStrongs[1].textContent = formatNumber(extraUnits);
+
+      // Practical implication: how much harder the goal is than break-even.
+      const uplift = breakEvenUnits > 0 ? ((requiredUnits - breakEvenUnits) / breakEvenUnits) * 100 : 0;
+      implicationStrongs[0].textContent = `${Math.round(uplift)}% more volume`;
+      implicationStrongs[1].textContent = formatNumber(breakEvenUnits);
+
+      // Scenarios
+      const higherPrice = input.pricePerUnit * 1.1;
+      const lowerFixed = input.fixedCosts * 0.9;
+      const priceScenario = calculateTargetProfit({ ...input, pricePerUnit: higherPrice });
+      const fixedScenario = calculateTargetProfit({ ...input, fixedCosts: lowerFixed });
+      out.scenarioPriceLabel.textContent = `Price up 10% to ${formatCurrency(higherPrice)}`;
+      out.scenarioPrice.textContent = priceScenario.ok
+        ? `${formatNumber(Math.ceil(priceScenario.data.requiredUnits))} units`
+        : "—";
+      out.scenarioFixedLabel.textContent = `Fixed costs down 10% to ${formatCurrency(lowerFixed)}`;
+      out.scenarioFixed.textContent = fixedScenario.ok
+        ? `${formatNumber(Math.ceil(fixedScenario.data.requiredUnits))} units`
+        : "—";
+
+      out.takeGoal.textContent = formatCurrency(input.desiredProfit);
+      out.takeUnits.textContent = `${formatNumber(requiredUnits)} units`;
+      out.takeRevenue.textContent = formatCompactCurrency(data.requiredRevenue);
+      out.takeExtra.textContent = `${formatNumber(extraUnits)} units`;
+      out.takeCm.textContent = formatCurrency(data.contributionMarginPerUnit);
+      out.takePer100.textContent = formatCurrency(data.contributionMarginPerUnit * 100);
+    },
+  });
+</script>

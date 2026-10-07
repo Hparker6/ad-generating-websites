@@ -1,0 +1,20 @@
+---
+import type { FaqItem } from "../navigation.ts";
+
+interface Props {
+  faqs: FaqItem[];
+}
+
+const { faqs } = Astro.props;
+---
+
+<div class="faq">
+  {
+    faqs.map((faq) => (
+      <div class="faq-item">
+        <h3>{faq.question}</h3>
+        <p>{faq.answer}</p>
+      </div>
+    ))
+  }
+</div>

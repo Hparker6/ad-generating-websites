@@ -1,0 +1,28 @@
+{
+  "name": "@repo/ui",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./analytics": "./src/analytics.ts",
+    "./controls": "./src/controls.ts",
+    "./components/*": "./src/components/*",
+    "./styles/*": "./src/styles/*"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "astro check"
+  },
+  "peerDependencies": {
+    "astro": "^5.0.0"
+  },
+  "dependencies": {
+    "@repo/seo": "workspace:*"
+  },
+  "devDependencies": {
+    "astro": "^5.1.1",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}

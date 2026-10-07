@@ -1,0 +1,364 @@
+---
+import { calculatePriceChange } from "@repo/calculators/price-change";
+import { buildMeta } from "@repo/seo";
+import { formatCurrency, formatPercentValue } from "@repo/ui";
+import AdSlot from "@repo/ui/components/AdSlot.astro";
+import FaqList from "@repo/ui/components/FaqList.astro";
+import Layout from "@repo/ui/components/Layout.astro";
+import NextStep from "@repo/ui/components/NextStep.astro";
+import { siteConfig } from "../../site.config";
+import MoreTools from "../components/MoreTools.astro";
+import { footerColumns, footerTagline, navItems } from "../site-nav";
+import { formatUpdated, getTool, toolStructuredData } from "../tools";
+
+const tool = getTool("/discount-calculator");
+
+const meta = buildMeta(siteConfig, {
+  title: "Discount Profit Calculator: Extra Sales a Discount Needs",
+  description:
+    "Free discount calculator for businesses: see how many more units you must sell after a discount to keep the same gross profit, and what the discount does to your margin.",
+  path: tool.href,
+});
+
+const defaults = { currentPrice: 100, unitCost: 60, discountPercent: 20 };
+const seed = calculatePriceChange({
+  currentPrice: defaults.currentPrice,
+  unitCost: defaults.unitCost,
+  changePercent: -defaults.discountPercent,
+});
+if (!seed.ok || seed.data.volumeChangeToBreakEvenPercent === null) {
+  throw new Error("Default discount inputs must be valid");
+}
+
+const presets = [
+  { label: "Retail sale", values: { currentPrice: 40, unitCost: 22, discountPercent: 25 } },
+  { label: "SaaS annual deal", values: { currentPrice: 120, unitCost: 18, discountPercent: 20 } },
+  { label: "Thin-margin goods", values: { currentPrice: 12, unitCost: 10, discountPercent: 10 } },
+];
+
+const faqs = [
+  {
+    question: "Why does a small discount need so many extra sales?",
+    answer:
+      "Because a discount comes entirely out of your profit, not out of the price as a whole. On a $100 item that costs $60, a 20% discount takes $20 off a $40 profit — half of it. To earn the same total profit you now have to sell twice as many units.",
+  },
+  {
+    question: "How do I calculate the sales increase needed after a discount?",
+    answer:
+      "Divide your current profit per unit by the profit per unit after the discount, then subtract 1. With $40 profit before and $20 after, that's 40 ÷ 20 − 1 = 1, or a 100% increase in units sold.",
+  },
+  {
+    question: "What if the discounted price is below my cost?",
+    answer:
+      "Then every sale loses money and no amount of extra volume makes up for it — the calculator says so instead of showing a number. Only discount below cost deliberately, for example as a loss leader that sells other products.",
+  },
+  {
+    question: "What counts as unit cost here?",
+    answer:
+      "Every cost that rises with each sale: the product itself, packaging, shipping you pay, payment processing fees, and sales commissions. Leave out fixed costs like rent, which don't change with volume.",
+  },
+  {
+    question: "Does this account for customers who would have bought anyway?",
+    answer:
+      "No — it assumes every sale is made at the discounted price. If some buyers would have paid full price, the real volume increase you need is higher than the figure shown.",
+  },
+];
+
+const structuredData = toolStructuredData(tool, meta.description);
+const volume = seed.data.volumeChangeToBreakEvenPercent;
+
+// Fixed comparison points, rendered server-side with the same values the
+// script uses so the page reads correctly before (and without) JavaScript.
+const scenarioDiscounts = [10, 20, 30];
+const scenarioRows = scenarioDiscounts.map((discount) => {
+  const result = calculatePriceChange({
+    currentPrice: defaults.currentPrice,
+    unitCost: defaults.unitCost,
+    changePercent: -discount,
+  });
+  return {
+    label: `${formatPercentValue(discount, 0)} off`,
+    value:
+      result.ok && result.data.volumeChangeToBreakEvenPercent !== null
+        ? `+${formatPercentValue(result.data.volumeChangeToBreakEvenPercent)} units`
+        : "Below cost",
+  };
+});
+---
+
+<Layout
+  config={siteConfig}
+  meta={meta}
+  structuredData={structuredData}
+  navItems={navItems}
+  footerColumns={footerColumns}
+  footerTagline={footerTagline}
+>
+  <div class="page-header">
+    <h1 class="page-title">{tool.name}</h1>
+    <p class="lede">
+      A discount comes straight out of profit. Extra sales needed = (profit per unit before ÷ profit
+      per unit after − 1) × 100. Enter your price, cost and discount to see how much more you have to sell
+      to break even on the promotion.
+    </p>
+    <p class="page-meta">Updated <time datetime={tool.updated}>{formatUpdated(tool.updated)}</time> · Standard cost-accounting formulas, shown in full below.</p>
+  </div>
+
+  <div class="calc-grid">
+    <form id="calc-form" class="panel" novalidate>
+      <div class="preset-row">
+        <span class="preset-label">Try an example</span>
+        {
+          presets.map((preset) => (
+            <button type="button" class="preset" data-preset={JSON.stringify(preset.values)} aria-pressed="false">
+              {preset.label}
+            </button>
+          ))
+        }
+      </div>
+
+      <div class="field-stack">
+        <div class="field">
+          <label for="currentPrice">Regular price</label>
+          <div class="input-row">
+            <button type="button" class="stepper" data-step-for="currentPrice" data-step-delta="-1" aria-label="Decrease regular price by 1">−</button>
+            <div class="input-affix">
+              <span class="affix affix-start" aria-hidden="true">$</span>
+              <input type="number" id="currentPrice" name="currentPrice" min="0.01" max="1000000" step="0.01" value={defaults.currentPrice} inputmode="decimal" />
+            </div>
+            <button type="button" class="stepper" data-step-for="currentPrice" data-step-delta="1" aria-label="Increase regular price by 1">+</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="unitCost">Cost per unit</label>
+          <div class="input-row">
+            <button type="button" class="stepper" data-step-for="unitCost" data-step-delta="-1" aria-label="Decrease unit cost by 1">−</button>
+            <div class="input-affix">
+              <span class="affix affix-start" aria-hidden="true">$</span>
+              <input type="number" id="unitCost" name="unitCost" min="0" max="1000000" step="0.01" value={defaults.unitCost} inputmode="decimal" aria-describedby="unitCost-hint" />
+            </div>
+            <button type="button" class="stepper" data-step-for="unitCost" data-step-delta="1" aria-label="Increase unit cost by 1">+</button>
+          </div>
+          <span class="field-hint" id="unitCost-hint">Product, shipping, fees — anything that scales with each sale.</span>
+        </div>
+
+        <div class="field">
+          <label for="discountPercent">Discount</label>
+          <div class="input-row">
+            <button type="button" class="stepper" data-step-for="discountPercent" data-step-delta="-5" aria-label="Decrease discount by 5 percent">−</button>
+            <div class="input-affix">
+              <span class="affix affix-end" aria-hidden="true">%</span>
+              <input type="number" id="discountPercent" name="discountPercent" min="0" max="99.99" step="1" value={defaults.discountPercent} inputmode="decimal" />
+            </div>
+            <button type="button" class="stepper" data-step-for="discountPercent" data-step-delta="5" aria-label="Increase discount by 5 percent">+</button>
+          </div>
+          <input type="range" id="discountSlider" min="0" max="60" step="1" value={defaults.discountPercent} data-sync-with="discountPercent" aria-label="Discount slider" />
+          <div class="range-scale" aria-hidden="true">
+            <span>0%</span>
+            <span>30%</span>
+            <span>60%</span>
+          </div>
+        </div>
+      </div>
+
+      <ul id="form-errors" class="error-list" aria-live="polite"></ul>
+
+      <button type="button" class="copy-link" data-copy-link aria-live="polite">Copy link to this result</button>
+    </form>
+
+    <section class="answer" aria-label="Result" aria-live="polite">
+      <div class="answer-head">
+        <span class="answer-label">Extra sales needed to break even</span>
+        <strong class="answer-value is-negative" id="answer-value">+{formatPercentValue(volume)}</strong>
+        <p class="answer-sentence" id="answer-sentence">
+          more units just to earn the same gross profit as at full price.
+        </p>
+      </div>
+
+      <div class="equation" data-label="Why">
+        <span class="eq-term">
+          <span class="eq-value" id="eq-old">{formatCurrency(seed.data.currentProfitPerUnit)}</span>
+          <span class="eq-name">Profit / unit now</span>
+        </span>
+        <span class="eq-op" aria-hidden="true">÷</span>
+        <span class="visually-hidden">divided by</span>
+        <span class="eq-term">
+          <span class="eq-value" id="eq-new">{formatCurrency(seed.data.newProfitPerUnit)}</span>
+          <span class="eq-name">Profit / unit on sale</span>
+        </span>
+        <span class="eq-op" aria-hidden="true">=</span>
+        <span class="visually-hidden">equals</span>
+        <span class="eq-term is-result">
+          <span class="eq-value" id="eq-factor">{(seed.data.currentProfitPerUnit / seed.data.newProfitPerUnit).toFixed(2)}×</span>
+          <span class="eq-name">Units needed</span>
+        </span>
+      </div>
+
+      <div class="answer-metrics">
+        <div class="metric">
+          <span class="metric-label">Sale price</span>
+          <span class="metric-value" id="metric-price">{formatCurrency(seed.data.newPrice)}</span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">Margin now → on sale</span>
+          <span class="metric-value" id="metric-margin">
+            {formatPercentValue(seed.data.currentMarginPercent)} → {formatPercentValue(seed.data.newMarginPercent)}
+          </span>
+        </div>
+      </div>
+
+      <div class="scenarios">
+        <h2>At other discounts</h2>
+        <ul class="scenario-list">
+          {
+            scenarioRows.map((row, index) => (
+              <li>
+                <span id={`scenario-${index}-label`}>{row.label}</span>
+                <span class="scenario-value" id={`scenario-${index}`}>{row.value}</span>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </section>
+  </div>
+
+  <section class="band takeaways">
+    <h2 class="band-label">What the discount costs</h2>
+    <ul class="takeaway-list">
+      <li>
+        A <strong class="figure" id="take-discount">20.0%</strong> discount removes
+        <strong class="figure is-negative" id="take-profit-share">50.0%</strong> of your profit on every unit.
+      </li>
+      <li>
+        For every <strong class="figure">100</strong> units you sell today, you'd need to sell
+        <strong class="figure" id="take-units">200</strong> on sale to end up with the same gross profit.
+      </li>
+      <li>
+        The thinner your margin, the harder this bites — check the figure before you promise a sale,
+        not after.
+      </li>
+    </ul>
+  </section>
+
+  <section class="band">
+    <h2 class="band-label">Discount formula</h2>
+    <details class="show-math" open>
+      <summary><span class="chevron" aria-hidden="true"></span>Formula and worked example</summary>
+      <div class="show-math-body">
+        <code class="formula">sale price = regular price × (1 − discount ÷ 100)</code>
+        <code class="formula">extra sales % = (profit per unit now ÷ profit per unit on sale − 1) × 100</code>
+        <p>
+          Total gross profit is units × profit per unit. Keeping that total constant while profit per
+          unit falls means units have to rise by the same ratio. Fixed costs don't change the answer,
+          because they're the same either way.
+        </p>
+
+        <h3>Worked example</h3>
+        <dl class="example-rows">
+          <div class="example-row"><dt>Regular price · cost</dt><dd>$100 · $60</dd></div>
+          <div class="example-row"><dt>Profit per unit now</dt><dd>$40</dd></div>
+          <div class="example-row"><dt>20% off → sale price</dt><dd>$80</dd></div>
+          <div class="example-row"><dt>Profit per unit on sale</dt><dd>$20</dd></div>
+          <div class="example-row is-result"><dt>Extra sales needed</dt><dd>40 ÷ 20 − 1 = 100%</dd></div>
+        </dl>
+      </div>
+    </details>
+  </section>
+
+  <AdSlot enabled={siteConfig.ads.enabled} clientId={siteConfig.ads.clientId} slotId={siteConfig.ads.inContentSlotId} height="250px" />
+
+  <section class="band">
+    <h2 class="band-label">Discount FAQ</h2>
+    <FaqList faqs={faqs} />
+  </section>
+
+  <MoreTools hrefs={["/price-increase-calculator", "/markup-vs-margin", "/contribution-margin"]} />
+
+  <section class="band">
+    <div class="band-label">Next</div>
+    <NextStep
+      href="/price-increase-calculator"
+      title="Price Increase Calculator"
+      description="Run it the other way: how many customers could you lose after raising prices and still come out ahead?"
+    />
+  </section>
+</Layout>
+
+<script>
+  import { calculatePriceChange } from "@repo/calculators/price-change";
+  import { formatCurrency, formatNumber, formatPercentValue, readNumericField, wireCalculatorForm } from "@repo/ui";
+
+  const form = document.getElementById("calc-form") as HTMLFormElement;
+  const errorsEl = document.getElementById("form-errors") as HTMLUListElement;
+  const byId = (id: string) => document.getElementById(id)!;
+  const value = (id: string) => readNumericField(id);
+
+  function readInputs() {
+    return {
+      currentPrice: value("currentPrice"),
+      unitCost: value("unitCost"),
+      changePercent: -value("discountPercent"),
+    };
+  }
+
+  const discountFor = (input: ReturnType<typeof readInputs>, discount: number) =>
+    calculatePriceChange({ ...input, changePercent: -discount });
+
+  wireCalculatorForm({
+    form,
+    errorsEl,
+    calculatorId: "discount",
+    readInputs,
+    // A negative discount would be a price increase; that has its own page.
+    calculate: (input) => {
+      const { changePercent } = input as ReturnType<typeof readInputs>;
+      if (changePercent > 0) return { ok: false, errors: ["Discount can't be negative."] };
+      return calculatePriceChange(input);
+    },
+    renderResult(data) {
+      const input = readInputs();
+      const discount = -input.changePercent;
+      const volume = data.volumeChangeToBreakEvenPercent;
+      const answer = byId("answer-value");
+
+      if (volume === null) {
+        answer.textContent = "Not possible";
+        byId("answer-sentence").textContent = `At ${formatCurrency(data.newPrice)} you'd lose ${formatCurrency(
+          Math.abs(data.newProfitPerUnit)
+        )} on every sale — no amount of extra volume makes that up.`;
+        byId("eq-factor").textContent = "—";
+        byId("take-units").textContent = "no number of";
+      } else {
+        answer.textContent = `+${formatPercentValue(volume)}`;
+        byId("answer-sentence").textContent =
+          volume === 0
+            ? "No discount, no extra sales needed."
+            : "more units just to earn the same gross profit as at full price.";
+        byId("eq-factor").textContent = `${(data.currentProfitPerUnit / data.newProfitPerUnit).toFixed(2)}×`;
+        byId("take-units").textContent = formatNumber(Math.ceil(100 * (1 + volume / 100) - 1e-9));
+      }
+      answer.classList.toggle("is-negative", volume === null || volume > 0);
+
+      byId("eq-old").textContent = formatCurrency(data.currentProfitPerUnit);
+      byId("eq-new").textContent = formatCurrency(data.newProfitPerUnit);
+      byId("metric-price").textContent = formatCurrency(data.newPrice);
+      byId("metric-margin").textContent = `${formatPercentValue(data.currentMarginPercent)} → ${formatPercentValue(
+        data.newMarginPercent
+      )}`;
+
+      byId("take-discount").textContent = formatPercentValue(discount);
+      const share = ((data.currentProfitPerUnit - data.newProfitPerUnit) / data.currentProfitPerUnit) * 100;
+      byId("take-profit-share").textContent = formatPercentValue(share);
+
+      [10, 20, 30].forEach((scenarioDiscount, index) => {
+        const result = discountFor(input, scenarioDiscount);
+        byId(`scenario-${index}`).textContent =
+          result.ok && result.data.volumeChangeToBreakEvenPercent !== null
+            ? `+${formatPercentValue(result.data.volumeChangeToBreakEvenPercent)} units`
+            : "Below cost";
+      });
+    },
+  });
+</script>

@@ -1,0 +1,111 @@
+---
+import { buildMeta, hasPlaceholderContactEmail, hasPlaceholderOrganization } from "@repo/seo";
+import Layout from "@repo/ui/components/Layout.astro";
+import { siteConfig } from "../../site.config";
+import { footerColumns, footerTagline, navItems } from "../site-nav";
+import { formatUpdated } from "../tools";
+
+const meta = buildMeta(siteConfig, {
+  title: "Terms of Use",
+  description: `The terms for using ${siteConfig.siteName}: free estimating tools, provided as is, not financial, tax, or legal advice.`,
+  path: "/terms",
+});
+
+const contactIsPlaceholder = hasPlaceholderContactEmail(siteConfig);
+const operator = hasPlaceholderOrganization(siteConfig)
+  ? `the operator of ${siteConfig.siteName}`
+  : siteConfig.organizationName;
+const lastUpdated = "2026-10-06";
+---
+
+<Layout
+  config={siteConfig}
+  meta={meta}
+  navItems={navItems}
+  footerColumns={footerColumns}
+  footerTagline={footerTagline}
+>
+  <div class="page-header">
+    <h1 class="page-title">Terms of Use</h1>
+    <p class="lede">Free tools for estimating — use them as a starting point, not the final word.</p>
+    <p class="page-meta">Last updated <time datetime={lastUpdated}>{formatUpdated(lastUpdated)}</time></p>
+  </div>
+
+  <section class="section prose">
+    <h2 class="section-title">Agreement</h2>
+    <p>
+      {siteConfig.siteName} ("the site") is provided by {operator}. By using the site you agree to these
+      terms. If you don't agree, please don't use it.
+    </p>
+  </section>
+
+  <section class="section prose">
+    <h2 class="section-title">Estimates, not advice</h2>
+    <p>
+      The calculators apply standard formulas to the numbers you enter. Results are estimates for
+      planning and education only. Nothing on the site is financial, accounting, tax, or legal advice,
+      and it doesn't account for your particular circumstances. Check important decisions with a
+      qualified professional.
+    </p>
+  </section>
+
+  <section class="section prose">
+    <h2 class="section-title">No warranty</h2>
+    <p>
+      The site is provided "as is" and "as available", without warranties of any kind, express or
+      implied — including accuracy, fitness for a particular purpose, and uninterrupted availability.
+      We work to keep the formulas correct, but mistakes are possible, and the site may change or go
+      offline at any time.
+    </p>
+  </section>
+
+  <section class="section prose">
+    <h2 class="section-title">Limitation of liability</h2>
+    <p>
+      To the fullest extent permitted by law, {operator} is not liable for any loss or damage —
+      including lost profits or business decisions made using the site's results — arising from your
+      use of the site. Some jurisdictions don't allow certain limitations, so parts of this section
+      may not apply to you.
+    </p>
+  </section>
+
+  <section class="section prose">
+    <h2 class="section-title">Acceptable use</h2>
+    <p>
+      You're welcome to use the calculators for personal and commercial work, and to link to any page,
+      including links that carry calculator inputs. Please don't attempt to disrupt the site, scrape it
+      in a way that degrades it for others, or republish its content as your own.
+    </p>
+  </section>
+
+  <section class="section prose">
+    <h2 class="section-title">Third-party services and links</h2>
+    <p>
+      The site may use third-party services (described in the <a href="/privacy">privacy policy</a>)
+      and may link to other websites, which have their own terms. We aren't responsible for their
+      content or practices.
+    </p>
+  </section>
+
+  <section class="section prose">
+    <h2 class="section-title">Changes</h2>
+    <p>
+      These terms may be updated from time to time; the date at the top shows when they last changed.
+      Continuing to use the site after a change means you accept the updated terms.
+    </p>
+  </section>
+
+  <section class="section prose">
+    <h2 class="section-title">Contact</h2>
+    {
+      contactIsPlaceholder ? (
+        <p>A contact address will be published on the <a href="/contact">contact page</a> shortly.</p>
+      ) : (
+        <p>
+          Questions about these terms can be sent to
+          <a href={`mailto:${siteConfig.contactEmail}`}>{siteConfig.contactEmail}</a>.
+        </p>
+      )
+    }
+  </section>
+</Layout>

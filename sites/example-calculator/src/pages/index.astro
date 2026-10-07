@@ -1,0 +1,193 @@
+---
+import { buildMeta, buildWebApplicationJsonLd } from "@repo/seo";
+import AdSlot from "@repo/ui/components/AdSlot.astro";
+import Layout from "@repo/ui/components/Layout.astro";
+import { siteConfig } from "../../site.config.ts";
+
+const meta = buildMeta(siteConfig, {
+  title: "Tip Calculator",
+  description:
+    "Calculate the tip and total bill split between any number of people. Free, fast, and works entirely in your browser.",
+  path: "/",
+});
+
+const faqs = [
+  {
+    question: "How is the tip amount calculated?",
+    answer: "The tip amount is the bill amount multiplied by the tip percentage you choose (for example, 20%).",
+  },
+  {
+    question: "How is the per-person amount calculated?",
+    answer:
+      "The total bill (original amount plus tip) is divided evenly by the number of people you enter.",
+  },
+  {
+    question: "Does this calculator store or send my bill amount anywhere?",
+    answer:
+      "No. All calculations happen in your browser. Nothing you type into the form is sent to a server or included in analytics.",
+  },
+];
+
+const structuredData = [
+  buildWebApplicationJsonLd(siteConfig, {
+    name: "Tip Calculator",
+    description: meta.description,
+    path: "/",
+    applicationCategory: "Utility",
+  }),
+];
+---
+
+<Layout config={siteConfig} meta={meta} structuredData={structuredData}>
+  <h1>Tip Calculator</h1>
+  <p>Enter the bill amount, choose a tip percentage, and split it between any number of people.</p>
+
+  <form id="tip-form" class="card" novalidate>
+    <div>
+      <label for="billAmount">Bill amount ($)</label>
+      <input type="number" id="billAmount" name="billAmount" min="0.01" step="0.01" value="50.00" inputmode="decimal" />
+    </div>
+
+    <div>
+      <label for="tipPercent">Tip percentage (%)</label>
+      <input type="number" id="tipPercent" name="tipPercent" min="0" max="100" step="1" value="18" inputmode="decimal" />
+    </div>
+
+    <div>
+      <label for="numPeople">Number of people</label>
+      <input type="number" id="numPeople" name="numPeople" min="1" max="50" step="1" value="1" inputmode="numeric" />
+    </div>
+
+    <ul id="form-errors" class="error-text" aria-live="polite"></ul>
+  </form>
+
+  <section class="card" aria-live="polite" style="margin-top: 1rem;">
+    <h2>Results</h2>
+    <dl id="results">
+      <dt>Tip amount</dt>
+      <dd id="result-tip">$0.00</dd>
+      <dt>Total bill</dt>
+      <dd id="result-total">$0.00</dd>
+      <dt>Per person (total)</dt>
+      <dd id="result-per-person-total">$0.00</dd>
+      <dt>Per person (tip only)</dt>
+      <dd id="result-per-person-tip">$0.00</dd>
+    </dl>
+  </section>
+
+  <AdSlot enabled={siteConfig.ads.enabled} clientId={siteConfig.ads.clientId} slotId={siteConfig.ads.inContentSlotId} height="250px" />
+
+  <section>
+    <h2>How this calculation works</h2>
+    <p>
+      The tip amount is the bill amount multiplied by the tip percentage:
+      <code>tip = bill &times; (percent &divide; 100)</code>. The total bill is the
+      original amount plus the tip. When splitting between multiple people, both
+      the total and the tip are divided evenly by the number of people.
+    </p>
+  </section>
+
+  <section>
+    <h2>Example</h2>
+    <p>
+      A $50.00 bill with an 18% tip produces a $9.00 tip and a $59.00 total.
+      Split between 2 people, each person pays $29.50, including $4.50 of tip.
+    </p>
+  </section>
+
+  <section>
+    <h2>Frequently asked questions</h2>
+    {
+      faqs.map((faq) => (
+        <div>
+          <h3>{faq.question}</h3>
+          <p>{faq.answer}</p>
+        </div>
+      ))
+    }
+  </section>
+
+  <section>
+    <h2>Related tools</h2>
+    <p><em>Placeholder — link to other calculators on this site here once they exist.</em></p>
+  </section>
+</Layout>
+
+<script>
+  import { calculateTip } from "@repo/calculators/tip-calculator";
+  import { trackEvent } from "@repo/ui/analytics";
+  import { readNumericField } from "@repo/ui/controls";
+
+  const CALCULATOR_ID = "tip-calculator";
+
+  const form = document.getElementById("tip-form") as HTMLFormElement;
+  const errorsEl = document.getElementById("form-errors") as HTMLUListElement;
+  const resultEls = {
+    tip: document.getElementById("result-tip") as HTMLElement,
+    total: document.getElementById("result-total") as HTMLElement,
+    perPersonTotal: document.getElementById("result-per-person-total") as HTMLElement,
+    perPersonTip: document.getElementById("result-per-person-tip") as HTMLElement,
+  };
+
+  function formatCurrency(value: number): string {
+    return `$${value.toFixed(2)}`;
+  }
+
+  // readNumericField, not Number(el.value): a browser blanks the value for
+  // anything it can't parse, and Number("") is 0, which would turn a cleared
+  // field into a confident answer of 0 instead of a validation message.
+  function readInputs() {
+    return {
+      billAmount: readNumericField("billAmount"),
+      tipPercent: readNumericField("tipPercent"),
+      numPeople: readNumericField("numPeople"),
+    };
+  }
+
+  let hasUserInteracted = false;
+  let trackingTimer: ReturnType<typeof setTimeout> | undefined;
+
+  /** Updates the visible results/errors. Returns the result so callers can decide whether to track it. */
+  function updateDisplay() {
+    const result = calculateTip(readInputs());
+    errorsEl.innerHTML = "";
+
+    if (!result.ok) {
+      for (const message of result.errors) {
+        const li = document.createElement("li");
+        li.textContent = message;
+        errorsEl.appendChild(li);
+      }
+      return result;
+    }
+
+    resultEls.tip.textContent = formatCurrency(result.data.tipAmount);
+    resultEls.total.textContent = formatCurrency(result.data.totalAmount);
+    resultEls.perPersonTotal.textContent = formatCurrency(result.data.perPersonTotal);
+    resultEls.perPersonTip.textContent = formatCurrency(result.data.perPersonTip);
+    return result;
+  }
+
+  function trackResult(result: ReturnType<typeof calculateTip>) {
+    if (!hasUserInteracted) return;
+    if (result.ok) {
+      trackEvent("calculator_complete", { calculator_id: CALCULATOR_ID });
+    } else {
+      trackEvent("calculator_error", {
+        calculator_id: CALCULATOR_ID,
+        error_count: result.errors.length,
+      });
+    }
+  }
+
+  // Display updates immediately on every keystroke; analytics are debounced
+  // so rapid typing/stepping doesn't fire an event per keystroke.
+  form.addEventListener("input", () => {
+    hasUserInteracted = true;
+    const result = updateDisplay();
+    clearTimeout(trackingTimer);
+    trackingTimer = setTimeout(() => trackResult(result), 400);
+  });
+
+  updateDisplay();
+</script>

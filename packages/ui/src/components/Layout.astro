@@ -1,0 +1,67 @@
+---
+import {
+  hasPlaceholderOrganization,
+  type ResolvedMeta,
+  type SiteConfig,
+} from "@repo/seo";
+import "../styles/base.css";
+import "../styles/components.css";
+import type { FooterColumn, NavItem } from "../navigation.ts";
+import AdsHead from "./AdsHead.astro";
+import Analytics from "./Analytics.astro";
+import BaseHead from "./BaseHead.astro";
+import Footer from "./Footer.astro";
+import Header from "./Header.astro";
+
+interface Props {
+  config: SiteConfig;
+  meta: ResolvedMeta;
+  structuredData?: Record<string, unknown>[];
+  navItems?: NavItem[];
+  footerColumns?: FooterColumn[];
+  footerTagline?: string;
+}
+
+const {
+  config,
+  meta,
+  structuredData = [],
+  navItems = [],
+  footerColumns = [],
+  footerTagline,
+} = Astro.props;
+
+// With build.format "file" the build-time pathname is "/break-even.html";
+// normalize it to the served URL so nav items can match it.
+const currentPath =
+  Astro.url.pathname.replace(/(\/index)?\.html$/, "").replace(/\/$/, "") || "/";
+
+// Never attribute the site to an invented company: until a real business
+// name is configured, the site's own name is the honest attribution.
+const identityIsPlaceholder = hasPlaceholderOrganization(config);
+const copyrightName = identityIsPlaceholder ? config.siteName : config.organizationName;
+---
+
+<!doctype html>
+<html lang={config.locale}>
+  <head>
+    <BaseHead meta={meta} themeColor={config.themeColor} structuredData={structuredData} />
+    <Analytics config={config} />
+    <AdsHead config={config} />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <Header siteName={config.siteName} navItems={navItems} currentPath={currentPath} />
+    <main id="main" class="page">
+      <div class="container">
+        <slot />
+      </div>
+    </main>
+    <Footer
+      siteName={config.siteName}
+      copyrightName={copyrightName}
+      tagline={footerTagline}
+      columns={footerColumns}
+    />
+  </body>
+</html>

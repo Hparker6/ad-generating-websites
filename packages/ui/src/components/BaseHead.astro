@@ -1,0 +1,47 @@
+---
+import { serializeJsonLd, type ResolvedMeta } from "@repo/seo";
+// Imported for their hashed build URLs so the two faces can be preloaded.
+// Without this the browser only discovers them after the stylesheet parses,
+// which delays first paint of the headline figure and causes a swap shift.
+import serifUrl from "../fonts/source-serif-4-latin.woff2?url";
+import sansUrl from "../fonts/archivo-latin.woff2?url";
+
+interface Props {
+  meta: ResolvedMeta;
+  themeColor: string;
+  /** JSON-LD objects to embed, one <script> per entry. */
+  structuredData?: Record<string, unknown>[];
+}
+
+const { meta, themeColor, structuredData = [] } = Astro.props;
+---
+
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="theme-color" content={themeColor} />
+<link rel="icon" type="image/png" href="/favicon.png" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+<link rel="preload" href={serifUrl} as="font" type="font/woff2" crossorigin />
+<link rel="preload" href={sansUrl} as="font" type="font/woff2" crossorigin />
+<title>{meta.title}</title>
+<meta name="description" content={meta.description} />
+<meta name="robots" content={meta.robots} />
+<link rel="canonical" href={meta.canonical} />
+
+<meta property="og:type" content="website" />
+<meta property="og:title" content={meta.title} />
+<meta property="og:description" content={meta.description} />
+<meta property="og:url" content={meta.canonical} />
+<meta property="og:image" content={meta.ogImage} />
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={meta.title} />
+<meta name="twitter:description" content={meta.description} />
+<meta name="twitter:image" content={meta.ogImage} />
+
+{
+  structuredData.map((entry) => (
+    <script type="application/ld+json" set:html={serializeJsonLd(entry)} />
+  ))
+}

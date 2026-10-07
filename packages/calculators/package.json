@@ -1,0 +1,30 @@
+{
+  "name": "@repo/calculators",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./result": "./src/result.ts",
+    "./tip-calculator": "./src/tip-calculator/index.ts",
+    "./break-even": "./src/break-even/index.ts",
+    "./target-profit": "./src/target-profit/index.ts",
+    "./contribution-margin": "./src/contribution-margin/index.ts",
+    "./markup-margin": "./src/markup-margin/index.ts",
+    "./selling-price": "./src/selling-price/index.ts",
+    "./price-change": "./src/price-change/index.ts",
+    "./freelance-rate": "./src/freelance-rate/index.ts",
+    "./food-cost": "./src/food-cost/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}

@@ -1,0 +1,45 @@
+---
+import { buildMeta, hasPlaceholderContactEmail } from "@repo/seo";
+import Layout from "@repo/ui/components/Layout.astro";
+import { siteConfig } from "../../site.config";
+import { footerColumns, footerTagline, navItems } from "../site-nav";
+
+const meta = buildMeta(siteConfig, {
+  title: "Contact",
+  description: `How to get in touch about ${siteConfig.siteName}.`,
+  path: "/contact",
+});
+
+// The configured address is still an RFC 2606 reserved example domain, which
+// can never receive mail — so it must not be offered as a working contact.
+const contactIsPlaceholder = hasPlaceholderContactEmail(siteConfig);
+---
+
+<Layout
+  config={siteConfig}
+  meta={meta}
+  navItems={navItems}
+  footerColumns={footerColumns}
+  footerTagline={footerTagline}
+>
+  <div class="page-header">
+    <h1 class="page-title">Contact</h1>
+    <p class="lede">
+      Found a bug in a calculator, spotted an incorrect formula, or want to
+      suggest another pricing tool?
+    </p>
+  </div>
+
+  {
+    contactIsPlaceholder ? (
+      <p class="prose">
+        A contact address for {siteConfig.siteName} is being set up and will be
+        listed here shortly.
+      </p>
+    ) : (
+      <p class="prose">
+        Email <a href={`mailto:${siteConfig.contactEmail}`}>{siteConfig.contactEmail}</a>.
+      </p>
+    )
+  }
+</Layout>

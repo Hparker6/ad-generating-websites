@@ -1,0 +1,57 @@
+name: Build and deploy sites
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+# Add these two repository secrets before deploys can actually run —
+# see docs/deployment.md. Build/test/typecheck run regardless; the deploy
+# step is skipped (not failed) when secrets aren't configured.
+#   CLOUDFLARE_API_TOKEN
+#   CLOUDFLARE_ACCOUNT_ID
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      example-calculator: ${{ steps.filter.outputs.example-calculator }}
+      pricing-calculators: ${{ steps.filter.outputs.pricing-calculators }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            shared: &shared
+              - 'packages/**'
+              - 'pnpm-workspace.yaml'
+              - 'pnpm-lock.yaml'
+              - 'package.json'
+              - 'tsconfig.base.json'
+            example-calculator:
+              - *shared
+              - 'sites/example-calculator/**'
+            pricing-calculators:
+              - *shared
+              - 'sites/pricing-calculators/**'
+
+  build-example-calculator:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.example-calculator == 'true'
+    uses: ./.github/workflows/build-and-deploy-site.yml
+    with:
+      site-filter: site-example-calculator
+      site-dist-path: sites/example-calculator/dist
+      cloudflare-project-name: example-calculator
+    secrets: inherit
+
+  build-pricing-calculators:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.pricing-calculators == 'true'
+    uses: ./.github/workflows/build-and-deploy-site.yml
+    with:
+      site-filter: site-pricing-calculators
+      site-dist-path: sites/pricing-calculators/dist
+      cloudflare-project-name: pricing-calculators
+    secrets: inherit

@@ -1,0 +1,19 @@
+{
+  "name": "ad-website-thing",
+  "private": true,
+  "version": "0.0.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "dev": "echo \"Run 'pnpm --filter <site-name> dev' to start a specific site, e.g. pnpm --filter site-example-calculator dev\" && exit 1",
+    "build": "pnpm -r --filter=./sites/** run build",
+    "test": "pnpm -r --filter=./packages/** run test",
+    "validate": "node scripts/validate-site-config.mjs",
+    "typecheck": "pnpm -r run typecheck"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  }
+}

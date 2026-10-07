@@ -1,0 +1,405 @@
+---
+import { calculateContributionMargin } from "@repo/calculators/contribution-margin";
+import { buildMeta } from "@repo/seo";
+import { formatCurrency, priceSplitLayout } from "@repo/ui";
+import AdSlot from "@repo/ui/components/AdSlot.astro";
+import FaqList from "@repo/ui/components/FaqList.astro";
+import Layout from "@repo/ui/components/Layout.astro";
+import NextStep from "@repo/ui/components/NextStep.astro";
+import { siteConfig } from "../../site.config";
+import MoreTools from "../components/MoreTools.astro";
+import { footerColumns, footerTagline, navItems } from "../site-nav";
+import { formatUpdated, getTool, toolStructuredData } from "../tools";
+
+const tool = getTool("/contribution-margin");
+
+const meta = buildMeta(siteConfig, {
+  title: "Contribution Margin Calculator (Per Unit & Ratio)",
+  description:
+    "Calculate the contribution margin — in dollars and as a percentage — for a single product, given its selling price and variable cost.",
+  path: "/contribution-margin",
+});
+
+const defaults = { sellingPrice: 50, variableCost: 30 };
+const seed = calculateContributionMargin(defaults);
+if (!seed.ok) throw new Error("Default contribution-margin inputs must be valid");
+const split = priceSplitLayout(defaults.sellingPrice, defaults.variableCost);
+
+const presets = [
+  { label: "Retail product", values: { sellingPrice: 25, variableCost: 15 } },
+  { label: "Service business", values: { sellingPrice: 500, variableCost: 150 } },
+  { label: "Low-margin goods", values: { sellingPrice: 12, variableCost: 10 } },
+];
+
+const faqs = [
+  {
+    question: "What is contribution margin, in plain terms?",
+    answer:
+      "It's what's left from one sale after paying the variable cost of that specific sale — the amount left over to go toward fixed costs and, eventually, profit. It says nothing yet about whether the business as a whole is profitable.",
+  },
+  {
+    question: "What counts as variable cost here?",
+    answer:
+      "Only costs that scale directly with each unit: materials, direct labor per unit, packaging, per-unit shipping or payment-processing fees. Fixed costs like rent or salaries are deliberately excluded from this calculation.",
+  },
+  {
+    question: "Is a negative contribution margin always a sign to stop selling a product?",
+    answer:
+      "Usually yes for the long run — every sale actively loses money, and no amount of volume fixes that. In the short term there can be strategic reasons to accept it temporarily, such as clearing inventory or entering a market, but it isn't sustainable.",
+  },
+  {
+    question: "How is the contribution margin ratio different from the dollar amount?",
+    answer:
+      "The dollar amount is useful per unit. The ratio (margin divided by price) is useful for comparing products with very different price points, and for estimating how much of each additional sales dollar becomes profit.",
+  },
+  {
+    question: "Is contribution margin the same as gross profit?",
+    answer:
+      "They're closely related but not identical. Gross profit subtracts cost of goods sold, which often includes some fixed production overhead. Contribution margin subtracts only truly variable costs, which is what makes it the right input for break-even analysis.",
+  },
+];
+
+const structuredData = toolStructuredData(tool, meta.description);
+---
+
+<Layout
+  config={siteConfig}
+  meta={meta}
+  structuredData={structuredData}
+  navItems={navItems}
+  footerColumns={footerColumns}
+  footerTagline={footerTagline}
+>
+  <div class="page-header">
+    <h1 class="page-title">{tool.name}</h1>
+    <p class="lede">Contribution margin is selling price minus variable cost per unit — what each sale leaves over to pay fixed costs and profit. Enter both to get it in dollars and as a ratio.</p>
+    <p class="page-meta">Updated <time datetime={tool.updated}>{formatUpdated(tool.updated)}</time> · Standard cost-accounting formulas, shown in full below.</p>
+  </div>
+
+  <div class="calc-grid">
+    <form id="calc-form" class="panel" novalidate>
+      <div class="preset-row">
+        <span class="preset-label">Try an example</span>
+        {
+          presets.map((preset) => (
+            <button type="button" class="preset" data-preset={JSON.stringify(preset.values)} aria-pressed="false">
+              {preset.label}
+            </button>
+          ))
+        }
+      </div>
+
+      <div class="field-stack">
+        <div class="field">
+          <label for="sellingPrice">Selling price</label>
+          <div class="input-row">
+            <button type="button" class="stepper" data-step-for="sellingPrice" data-step-delta="-1" aria-label="Decrease selling price by 1">−</button>
+            <div class="input-affix">
+              <span class="affix affix-start" aria-hidden="true">$</span>
+              <input type="number" id="sellingPrice" name="sellingPrice" min="0.01" max="1000000" step="0.01" value="50" inputmode="decimal" />
+            </div>
+            <button type="button" class="stepper" data-step-for="sellingPrice" data-step-delta="1" aria-label="Increase selling price by 1">+</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="variableCost">Cost per unit</label>
+          <div class="input-row">
+            <button type="button" class="stepper" data-step-for="variableCost" data-step-delta="-1" aria-label="Decrease cost per unit by 1">−</button>
+            <div class="input-affix">
+              <span class="affix affix-start" aria-hidden="true">$</span>
+              <input type="number" id="variableCost" name="variableCost" min="0" max="1000000" step="0.01" value="30" inputmode="decimal" aria-describedby="variableCost-hint" />
+            </div>
+            <button type="button" class="stepper" data-step-for="variableCost" data-step-delta="1" aria-label="Increase cost per unit by 1">+</button>
+          </div>
+          <span class="field-hint" id="variableCost-hint">Per-unit costs only — not rent or salaries.</span>
+        </div>
+      </div>
+
+      <ul id="form-errors" class="error-list" aria-live="polite"></ul>
+
+      <button type="button" class="copy-link" data-copy-link aria-live="polite">Copy link to this result</button>
+    </form>
+
+    <section class="answer" aria-label="Result" aria-live="polite">
+      <div class="answer-head">
+        <span class="answer-label">Each sale contributes</span>
+        <strong class="answer-value" id="answer-value">$20.00</strong>
+        <p class="answer-sentence" id="answer-sentence">
+          toward fixed costs and profit — 40.0% of what you charge.
+        </p>
+      </div>
+
+      <div class="equation" data-label="Why">
+        <span class="eq-term">
+          <span class="eq-value" id="eq-price">$50.00</span>
+          <span class="eq-name">Selling price</span>
+        </span>
+        <span class="eq-op" aria-hidden="true">−</span>
+        <span class="visually-hidden">minus</span>
+        <span class="eq-term">
+          <span class="eq-value" id="eq-cost">$30.00</span>
+          <span class="eq-name">Cost per unit</span>
+        </span>
+        <span class="eq-op" aria-hidden="true">=</span>
+        <span class="visually-hidden">equals</span>
+        <span class="eq-term is-result">
+          <span class="eq-value" id="eq-cm">$20.00</span>
+          <span class="eq-name">Kept per sale</span>
+        </span>
+      </div>
+
+        <p class="answer-implication" id="answer-implication">
+          At this margin it takes <strong>50 sales</strong> to cover every
+          <strong>$1,000</strong> of fixed costs you carry.
+        </p>
+      <div class="answer-metrics">
+        <div class="metric">
+          <span class="metric-label">Margin ratio</span>
+          <span class="metric-value" id="metric-ratio">40.0%</span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">Goes to costs</span>
+          <span class="metric-value" id="metric-cost-share">60.0%</span>
+        </div>
+      </div>
+      <div class="scenarios">
+        <h2>If something changed</h2>
+        <ul class="scenario-list">
+          <li>
+            <span id="scenario-price-label">Price up 10% to $55.00</span>
+            <span class="scenario-value" id="scenario-price">$25.00 a sale</span>
+          </li>
+          <li>
+            <span id="scenario-cost-label">Unit cost down 10% to $27.00</span>
+            <span class="scenario-value" id="scenario-cost">$23.00 a sale</span>
+          </li>
+        </ul>
+      </div>
+    </section>
+  </div>
+
+  <section class="band">
+    <h2 class="band-label">Contribution margin breakdown</h2>
+    <figure class="viz">
+    <div class="viz-title">Where every dollar of the price goes</div>
+    <div class="split-bar" aria-hidden="true">
+      <div class="split-part is-cost" id="viz-cost" style={`width: ${split.costPercent}%`}>
+        <span class="split-amount" id="viz-cost-amount">{formatCurrency(defaults.variableCost)}</span>
+        <span class="split-name" id="viz-cost-name">Cost · 60.0%</span>
+      </div>
+      <div class="split-part is-keep" id="viz-keep" style={`width: ${split.contributionPercent}%`}>
+        <span class="split-amount" id="viz-keep-amount">
+          {formatCurrency(seed.data.contributionMarginPerUnit)}
+        </span>
+        <span class="split-name" id="viz-keep-name">You keep · 40.0%</span>
+      </div>
+    </div>
+    <div class="split-scale" aria-hidden="true">
+      <span>$0</span>
+      <span>Selling price <strong id="viz-price">{formatCurrency(defaults.sellingPrice)}</strong></span>
+    </div>
+    <figcaption id="viz-caption">
+      <strong>$30.00</strong> of every <strong>$50.00</strong> sale leaves again
+      immediately to pay for that unit. The remaining <strong>$20.00</strong> is all
+      you have to cover rent, salaries and everything else.
+    </figcaption>
+    </figure>
+  </section>
+
+  <section class="band takeaways">
+    <h2 class="band-label">What your margin means</h2>
+    <ul class="takeaway-list">
+      <li>
+        Every sale leaves you <strong class="figure is-positive" id="take-cm">$20.00</strong>
+        — <strong class="figure" id="take-ratio">40.0%</strong> of the price — once its own
+        costs are paid.
+      </li>
+      <li>
+        Every <strong class="figure">$1,000</strong> of fixed costs you carry takes
+        <strong class="figure" id="take-units">50</strong> sales to cover at this margin.
+      </li>
+      <li id="take-third-item">
+        A <strong class="figure">10%</strong> price rise would lift contribution to
+        <strong class="figure is-positive" id="take-improved">$25.00</strong> a sale — margin
+        responds much faster than price does.
+      </li>
+    </ul>
+  </section>
+
+  <section class="band">
+    <h2 class="band-label">Contribution margin formula</h2>
+    <details class="show-math" open>
+    <summary><span class="chevron" aria-hidden="true"></span>Formula and worked example</summary>
+    <div class="show-math-body">
+      <code class="formula">contribution margin = selling price − variable cost per unit</code>
+      <code class="formula">contribution margin ratio = contribution margin ÷ selling price</code>
+      <p>
+        A negative result means variable cost exceeds the price. The calculator shows it
+        rather than treating it as an error — knowing you lose money on every unit is the
+        useful answer.
+      </p>
+      <p>
+        Contribution margin isn't quite gross profit: gross profit subtracts cost of goods
+        sold, which often bundles in some fixed overhead. This subtracts only truly
+        variable costs, which is what makes it the right input for break-even.
+      </p>
+
+      <h3>Worked example</h3>
+      <dl class="example-rows">
+        <div class="example-row"><dt>Selling price</dt><dd>$50</dd></div>
+        <div class="example-row"><dt>Variable cost</dt><dd>$30</dd></div>
+        <div class="example-row is-result"><dt>Contribution</dt><dd>$20 · 40%</dd></div>
+        <div class="example-row"><dt>Against $10,000 fixed costs</dt><dd>500 units to break even</dd></div>
+      </dl>
+    </div>
+    </details>
+  </section>
+
+  <AdSlot
+    enabled={siteConfig.ads.enabled}
+    clientId={siteConfig.ads.clientId}
+    slotId={siteConfig.ads.inContentSlotId}
+    height="250px"
+  />
+
+  <section class="band">
+    <h2 class="band-label">Contribution margin FAQ</h2>
+    <FaqList faqs={faqs} />
+  </section>
+
+  <MoreTools hrefs={["/break-even", "/markup-vs-margin", "/discount-calculator"]} />
+
+  <section class="band">
+    <div class="band-label">Next</div>
+    <NextStep
+    href="/break-even"
+    title="Break-Even Calculator"
+    description="Turn this per-sale margin into the sales volume your business needs."
+    />
+  </section>
+</Layout>
+
+<script>
+  import { calculateContributionMargin } from "@repo/calculators/contribution-margin";
+  import { formatCurrency, formatNumber, formatPercent, priceSplitLayout, readNumericField, wireCalculatorForm } from "@repo/ui";
+
+  const form = document.getElementById("calc-form") as HTMLFormElement;
+  const errorsEl = document.getElementById("form-errors") as HTMLUListElement;
+  const byId = (id: string) => document.getElementById(id)!;
+
+  const out = {
+    value: byId("answer-value"),
+    sentence: byId("answer-sentence"),
+    ratio: byId("metric-ratio"),
+    costShare: byId("metric-cost-share"),
+    price: byId("viz-price"),
+    cost: byId("viz-cost"),
+    costAmount: byId("viz-cost-amount"),
+    costName: byId("viz-cost-name"),
+    keep: byId("viz-keep"),
+    keepAmount: byId("viz-keep-amount"),
+    keepName: byId("viz-keep-name"),
+    takeCm: byId("take-cm"),
+    takeRatio: byId("take-ratio"),
+    takeUnits: byId("take-units"),
+    takeImproved: byId("take-improved"),
+    scenarioPriceLabel: byId("scenario-price-label"),
+    scenarioPrice: byId("scenario-price"),
+    scenarioCostLabel: byId("scenario-cost-label"),
+    scenarioCost: byId("scenario-cost"),
+  };
+
+  const captionStrongs = byId("viz-caption").querySelectorAll("strong");
+  const implicationStrongs = byId("answer-implication").querySelectorAll("strong");
+  const value = (id: string) => readNumericField(id);
+
+  function readInputs() {
+    return { sellingPrice: value("sellingPrice"), variableCost: value("variableCost") };
+  }
+
+  wireCalculatorForm({
+    form,
+    errorsEl,
+    calculatorId: "contribution-margin",
+    calculate: calculateContributionMargin,
+    readInputs,
+    renderResult(data) {
+      const input = readInputs();
+
+      // Equation terms, from the same values rendered everywhere else.
+      byId("eq-price").textContent = formatCurrency(input.sellingPrice);
+      byId("eq-cost").textContent = formatCurrency(input.variableCost);
+      byId("eq-cm").textContent = formatCurrency(data.contributionMarginPerUnit);
+      byId("eq-cm").parentElement!.classList.toggle(
+        "is-negative",
+        data.contributionMarginPerUnit < 0
+      );
+      const split = priceSplitLayout(input.sellingPrice, input.variableCost);
+      const isLoss = data.contributionMarginPerUnit < 0;
+
+      out.value.textContent = formatCurrency(data.contributionMarginPerUnit);
+      out.value.classList.toggle("is-negative", isLoss);
+      out.value.classList.toggle("is-positive", !isLoss);
+
+      out.sentence.textContent = isLoss
+        ? "lost on every unit you sell. No amount of volume fixes this."
+        : `toward fixed costs and profit — ${formatPercent(
+            data.contributionMarginRatio
+          )} of what you charge.`;
+
+      out.ratio.textContent = formatPercent(data.contributionMarginRatio);
+      out.ratio.classList.toggle("is-negative", isLoss);
+      out.costShare.textContent = formatPercent(1 - data.contributionMarginRatio);
+      out.price.textContent = formatCurrency(input.sellingPrice);
+
+      // Split bar: width is the share of the price, labels carry $ and %.
+      out.cost.classList.toggle("is-loss", split.isNegative);
+      out.cost.classList.toggle("is-cost", !split.isNegative);
+      out.cost.style.width = `${split.isNegative ? 100 : split.costPercent}%`;
+      out.keep.style.width = `${split.isNegative ? 0 : split.contributionPercent}%`;
+      out.costAmount.textContent = formatCurrency(input.variableCost);
+      out.costName.textContent = split.isNegative
+        ? "Cost exceeds the price"
+        : `Cost · ${formatPercent(1 - data.contributionMarginRatio)}`;
+      out.keepAmount.textContent = split.isNegative
+        ? ""
+        : formatCurrency(data.contributionMarginPerUnit);
+      out.keepName.textContent = split.isNegative
+        ? ""
+        : `You keep · ${formatPercent(data.contributionMarginRatio)}`;
+
+      // Caption doubles as the text equivalent for the bar.
+      captionStrongs[0].textContent = formatCurrency(input.variableCost);
+      captionStrongs[1].textContent = formatCurrency(input.sellingPrice);
+      captionStrongs[2].textContent = formatCurrency(data.contributionMarginPerUnit);
+
+      // Takeaways
+      out.takeCm.textContent = formatCurrency(data.contributionMarginPerUnit);
+      out.takeCm.classList.toggle("is-negative", isLoss);
+      out.takeCm.classList.toggle("is-positive", !isLoss);
+      out.takeRatio.textContent = formatPercent(data.contributionMarginRatio);
+      out.takeUnits.textContent = isLoss
+        ? "no number of"
+        : formatNumber(Math.ceil(1000 / data.contributionMarginPerUnit));
+
+      const improved = input.sellingPrice * 1.1 - input.variableCost;
+      out.takeImproved.textContent = formatCurrency(improved);
+      out.takeImproved.classList.toggle("is-negative", improved < 0);
+      out.takeImproved.classList.toggle("is-positive", improved >= 0);
+
+      // Implication: a scale-free rate, so no fixed-cost figure is assumed.
+      implicationStrongs[0].textContent = isLoss
+        ? "no number of sales"
+        : `${formatNumber(Math.ceil(1000 / data.contributionMarginPerUnit))} sales`;
+
+      // Scenarios
+      const higherPrice = input.sellingPrice * 1.1;
+      const lowerCost = input.variableCost * 0.9;
+      out.scenarioPriceLabel.textContent = `Price up 10% to ${formatCurrency(higherPrice)}`;
+      out.scenarioPrice.textContent = `${formatCurrency(higherPrice - input.variableCost)} a sale`;
+      out.scenarioCostLabel.textContent = `Unit cost down 10% to ${formatCurrency(lowerCost)}`;
+      out.scenarioCost.textContent = `${formatCurrency(input.sellingPrice - lowerCost)} a sale`;
+    },
+  });
+</script>

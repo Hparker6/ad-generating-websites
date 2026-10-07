@@ -1,0 +1,42 @@
+---
+import type { NavItem } from "../navigation.ts";
+
+interface Props {
+  siteName: string;
+  navItems?: NavItem[];
+  /** Current path, used to mark the active nav item. */
+  currentPath?: string;
+}
+
+const { siteName, navItems = [], currentPath = "" } = Astro.props;
+
+function isActive(href: string): boolean {
+  if (href === "/") return currentPath === "/";
+  return currentPath === href || currentPath.startsWith(`${href}/`);
+}
+---
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="/">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span>{siteName}</span>
+    </a>
+
+    {
+      navItems.length > 0 && (
+        <nav class="site-nav" aria-label="Calculators">
+          <ul>
+            {navItems.map((item) => (
+              <li>
+                <a href={item.href} aria-current={isActive(item.href) ? "page" : undefined}>
+                  {item.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )
+    }
+  </div>
+</header>

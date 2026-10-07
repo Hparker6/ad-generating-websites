@@ -1,0 +1,26 @@
+---
+interface Props {
+  href: string;
+  title: string;
+  description: string;
+  label?: string;
+  cue?: string;
+}
+
+const {
+  href,
+  title,
+  description,
+  label = "Next step",
+  cue = "Open calculator",
+} = Astro.props;
+---
+
+<a class="next-step" href={href}>
+  <span>
+    <span class="next-step-label">{label}</span>
+    <span class="next-step-title">{title}</span>
+    <span class="next-step-desc">{description}</span>
+  </span>
+  <span class="next-step-cue" aria-hidden="true">{cue}</span>
+</a>

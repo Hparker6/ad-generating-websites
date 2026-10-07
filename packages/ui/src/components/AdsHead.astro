@@ -1,0 +1,30 @@
+---
+import { isAdsActive, type SiteConfig } from "@repo/seo";
+
+interface Props {
+  config: SiteConfig;
+}
+
+const { config } = Astro.props;
+const clientId = config.ads.clientId;
+const active = isAdsActive(config);
+---
+
+{
+  /*
+   * Site verification for AdSense review. Safe to ship before approval: it's
+   * a single meta tag, loads nothing, and sets no cookies.
+   */
+  clientId && <meta name="google-adsense-account" content={clientId} />
+}
+
+{
+  /* The loader runs once per page; it also powers Auto ads if those are on. */
+  active && (
+    <script
+      async
+      src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${clientId}`}
+      crossorigin="anonymous"
+    />
+  )
+}
