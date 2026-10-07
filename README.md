@@ -149,4 +149,5 @@ site's privacy page is still a template placeholder.
 ## Site-specific launch checklists
 
 - [docs/launch-checklist.md](docs/launch-checklist.md) — `pricing-calculators`
+- [docs/infrastructure.md](docs/infrastructure.md) — live setup record: domain, Pages project, env vars, DNS and Email Routing records, accounts
 - [docs/operations-checklist.md](docs/operations-checklist.md) — Cloudflare setup, security, ads, legal, and ongoing operations
