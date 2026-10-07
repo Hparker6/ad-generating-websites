@@ -38,7 +38,7 @@ Workers & Pages → Create → Pages → **Connect to Git** → pick this repo.
 
 | Setting | Value |
 |---|---|
-| Production branch | The branch you actually push to (`master` today — or rename it to `main` first and use that) |
+| Production branch | `main` |
 | Root directory | `/` |
 | Build command | `pnpm install --frozen-lockfile && pnpm --filter site-pricing-calculators build` |
 | Build output directory | `sites/pricing-calculators/dist` |
@@ -142,10 +142,8 @@ reading it.
 
 ## 2. Deployment and release
 
-- **[launch] Commit and push the repo.** It has no commits yet, so nothing is
-  backed up. Push to a **private** GitHub repo before connecting Cloudflare.
-- **[launch] Decide the branch name.** The GitHub workflow triggers on `main`
-  and `master`. Cloudflare's production branch must match the one you push.
+- **Repo (done):** pushed to `github.com/Hparker6/ad-generating-websites`, branch `main`. **[you]** Make sure the GitHub repo is **private** unless you intend it to be public.
+- **Branch:** `main` is the production branch; set the same in Cloudflare.
 - **[launch] Smoke-test right after the first production deploy:**
   - `/robots.txt` shows `Allow: /` and the sitemap URL on your domain.
   - `/llms.txt` lists your domain's URLs.
