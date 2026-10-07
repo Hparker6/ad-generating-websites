@@ -27,13 +27,13 @@ needs a Wrangler config this repo doesn't have).
 
 | Setting | Value |
 |---|---|
-| Project name | `thebusinesscalc` (suggested; record the actual name here) |
+| Project name | `ad-generating-websites` → `https://ad-generating-websites.pages.dev` |
 | Production branch | `main` |
 | Framework preset | None |
 | Build command | `pnpm install --frozen-lockfile && pnpm --filter site-pricing-calculators build` |
 | Build output directory | `sites/pricing-calculators/dist` |
 | Root directory | `/` (blank) |
-| Custom domains | `thebusinesscalc.com`, `www.thebusinesscalc.com` |
+| Custom domains | `thebusinesscalc.com`, `www.thebusinesscalc.com` (attach in the Custom domains tab) |
 
 ### Environment variables
 
@@ -42,8 +42,8 @@ Set on **Production only**, so preview deploys stay `noindex` and out of GA4.
 | Variable | Value | Status |
 |---|---|---|
 | `NODE_VERSION` | `20` | set at project creation |
-| `PUBLIC_SITE_DOMAIN` | `thebusinesscalc.com` | set at project creation |
-| `PUBLIC_CONTACT_EMAIL` | `hello@thebusinesscalc.com` | add once Email Routing forwarding is verified, then redeploy |
+| `PUBLIC_SITE_DOMAIN` | `thebusinesscalc.com` | set — verified live October 6, 2026 |
+| `PUBLIC_CONTACT_EMAIL` | `hello@thebusinesscalc.com` | set — verified live October 6, 2026 |
 | `PUBLIC_ORGANIZATION_NAME` | — | optional; not set |
 | `PUBLIC_GA4_MEASUREMENT_ID` | — | don't set; only overrides the ID in `site.config.ts` |
 | `PUBLIC_ADSENSE_CLIENT_ID` | — | later: when applying to AdSense |
