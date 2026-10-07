@@ -33,7 +33,7 @@ needs a Wrangler config this repo doesn't have).
 | Build command | `pnpm install --frozen-lockfile && pnpm --filter site-pricing-calculators build` |
 | Build output directory | `sites/pricing-calculators/dist` |
 | Root directory | `/` (blank) |
-| Custom domains | `thebusinesscalc.com`, `www.thebusinesscalc.com` (attach in the Custom domains tab) |
+| Custom domains | `thebusinesscalc.com` — live October 6, 2026 (CNAME `@` → `ad-generating-websites.pages.dev`, created by Pages). `www.thebusinesscalc.com` — to attach, then 301 to apex via a Redirect Rule |
 
 ### Environment variables
 
