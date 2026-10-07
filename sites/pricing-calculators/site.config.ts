@@ -3,12 +3,11 @@ import { GA4_PLACEHOLDER_ID, PLACEHOLDER_ORGANIZATION_NAME, validateSiteConfig }
 /**
  * Single source of truth for this site's domain + GA4 ID.
  *
- * Neither a domain nor a GA4 ID has been assigned yet. Both can be set
- * later WITHOUT editing this file or any code, by setting these two
- * environment variables in the Cloudflare Pages project settings:
+ * The domain comes from an environment variable set in the Cloudflare Pages
+ * project settings (Production environment only):
  *
- *   PUBLIC_SITE_DOMAIN           e.g. "thebusinesscalc.com" (no protocol)
- *   PUBLIC_GA4_MEASUREMENT_ID    e.g. "G-XXXXXXXXXX"
+ *   PUBLIC_SITE_DOMAIN           "thebusinesscalc.com" (no protocol)
+ *   PUBLIC_GA4_MEASUREMENT_ID    optional override of the GA4 ID below
  *
  * Until PUBLIC_SITE_DOMAIN is set, `domain` stays `null`. That puts the
  * whole site in "not production-ready" mode (see @repo/seo's
@@ -20,8 +19,12 @@ import { GA4_PLACEHOLDER_ID, PLACEHOLDER_ORGANIZATION_NAME, validateSiteConfig }
 const envDomain = process.env.PUBLIC_SITE_DOMAIN?.trim();
 const domain = envDomain ? envDomain : null;
 
+// The site's GA4 property. It reports only from production builds (a real
+// domain is set), so Cloudflare preview deploys and local builds never send
+// test traffic into the real stats. PUBLIC_GA4_MEASUREMENT_ID overrides it.
+const GA4_PRODUCTION_ID = "G-8FRTXVHB0G";
 const envGa4Id = process.env.PUBLIC_GA4_MEASUREMENT_ID?.trim();
-const ga4MeasurementId = envGa4Id ? envGa4Id : GA4_PLACEHOLDER_ID;
+const ga4MeasurementId = envGa4Id || (domain ? GA4_PRODUCTION_ID : GA4_PLACEHOLDER_ID);
 
 // Optional at launch. While unset, the footer credits the site name and the
 // contact/privacy pages say no inbox is published yet.

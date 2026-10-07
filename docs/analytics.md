@@ -1,7 +1,8 @@
 # Analytics event dictionary
 
-One GA4 property per site. The measurement ID is supplied at build time by the
-`PUBLIC_GA4_MEASUREMENT_ID` environment variable and validated against GA4's
+One GA4 property per site. For `pricing-calculators` the ID (`G-8FRTXVHB0G`)
+is the production default in `site.config.ts`, used only when
+`PUBLIC_SITE_DOMAIN` is set; `PUBLIC_GA4_MEASUREMENT_ID` overrides it. The ID is validated against GA4's
 own format (`G-` plus 4–20 uppercase alphanumerics) in
 `packages/seo/src/site-config.ts`. While it is left at `G-PLACEHOLDER`,
 `isAnalyticsEnabled()` returns false, no gtag script is emitted, and the site
@@ -40,8 +41,12 @@ issues zero outbound requests (`sec-audit.mjs`, section 4).
   handler only if that changes.
 - **No scroll depth, no engagement pings beyond GA4's defaults.** They would not
   change a decision about a calculator.
-- **No consent banner.** GA4 is off entirely right now, so there is nothing to
-  consent to. Before enabling it, see the open question below.
+- **No consent banner yet — Consent Mode v2 instead.** `Analytics.astro` sets
+  consent to *denied* by default for the EEA, UK and Switzerland (cookieless
+  pings, which Google models) and *granted* elsewhere. When a consent banner is
+  added (AdSense Privacy & messaging, required before ads), it updates consent
+  through `gtag("consent", "update", …)` and EU/UK visitors who accept are then
+  measured with cookies.
 
 ## Measuring whether the site works
 
@@ -70,15 +75,15 @@ every page and tells you nothing.
 
 ## Open questions for human/legal review
 
-These are not legal conclusions, they are the decisions a person needs to make
-before analytics is switched on:
+These are not legal conclusions; they're decisions for a person to confirm:
 
-- GA4 sets cookies and processes IP-derived location. Whether a consent banner
-  is required depends on the audience's jurisdiction (UK/EU PECR and GDPR, and
-  several US state laws, each differ). `anonymize_ip` is set, which reduces but
-  does not eliminate the question.
-- The privacy policy (`/privacy`) currently describes a site that collects
-  nothing. It must be updated in the same deploy that enables analytics,
-  not after.
+- GA4 is live in production (`G-8FRTXVHB0G`, set in `site.config.ts`; preview
+  and local builds don't report). EEA/UK/CH visitors get no analytics cookies
+  until a consent banner exists. Whether US state laws call for an opt-out
+  link for analytics alone is worth a check; the AdSense US-states message
+  covers it once ads start.
+- The privacy policy (`/privacy`) switches to its analytics wording
+  automatically whenever a GA4 ID is configured, including the consent
+  behavior above.
 - If ads are enabled later, AdSense's own data collection is a separate and
   substantially larger consent question than GA4's.
