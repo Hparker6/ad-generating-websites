@@ -12,6 +12,11 @@ export interface PageSeo {
   ogImage?: string;
   /** Set true for pages that shouldn't be indexed (e.g. thank-you pages). */
   noindex?: boolean;
+  /**
+   * Use `title` as the whole <title>, without " | Site Name" appended — for
+   * the homepage, whose title already leads with the brand.
+   */
+  fullTitle?: boolean;
 }
 
 export interface ResolvedMeta {
@@ -27,7 +32,7 @@ export function buildMeta(config: SiteConfig, page: PageSeo): ResolvedMeta {
   // preview/localhost build can never get indexed under a throwaway URL.
   const indexable = isProductionReady(config) && !page.noindex;
   return {
-    title: `${page.title} | ${config.siteName}`,
+    title: page.fullTitle ? page.title : `${page.title} | ${config.siteName}`,
     description: page.description ?? config.defaultDescription,
     canonical: canonicalUrl(config, page.path),
     ogImage: canonicalUrl(config, page.ogImage ?? config.defaultOgImage),

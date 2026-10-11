@@ -4,3 +4,4 @@ export * from "./charts.ts";
 export * from "./controls.ts";
 export * from "./format.ts";
 export * from "./navigation.ts";
+export * from "./link-tracking.ts";

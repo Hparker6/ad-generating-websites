@@ -63,5 +63,10 @@ const copyrightName = identityIsPlaceholder ? config.siteName : config.organizat
       tagline={footerTagline}
       columns={footerColumns}
     />
+    <script>
+      // Next-step and related-tool clicks, counted once per click on every page.
+      import { wireLinkTracking } from "../link-tracking.ts";
+      wireLinkTracking();
+    </script>
   </body>
 </html>

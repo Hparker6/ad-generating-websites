@@ -44,4 +44,10 @@ describe("buildMeta", () => {
     expect(meta.title).toBe("Home | Example Calculator");
     expect(meta.description).toBe("A simple example calculator.");
   });
+
+  it("uses the title as-is when fullTitle is set", () => {
+    const config = validateSiteConfig({ ...baseConfig, domain: "example.com" });
+    const meta = buildMeta(config, { title: "Brand: Tagline", path: "/", fullTitle: true });
+    expect(meta.title).toBe("Brand: Tagline");
+  });
 });

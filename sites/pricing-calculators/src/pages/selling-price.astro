@@ -14,7 +14,7 @@ import { formatUpdated, getTool, toolStructuredData } from "../tools";
 const tool = getTool("/selling-price");
 
 const meta = buildMeta(siteConfig, {
-  title: "Selling Price Calculator from Cost & Margin",
+  title: "Selling Price Calculator (Cost & Margin)",
   description:
     "Enter your unit cost and a target gross margin percentage to calculate the selling price required to hit that margin.",
   path: "/selling-price",
@@ -77,7 +77,7 @@ const structuredData = toolStructuredData(tool, meta.description);
   </div>
 
   <div class="calc-grid">
-    <form id="calc-form" class="panel" novalidate>
+    <form id="calc-form" class="panel" data-calculator-id={tool.href.slice(1)} novalidate>
       <div class="preset-row">
         <span class="preset-label">Try an example</span>
         {
@@ -349,7 +349,6 @@ const structuredData = toolStructuredData(tool, meta.description);
   wireCalculatorForm({
     form,
     errorsEl,
-    calculatorId: "selling-price",
     calculate: calculateSellingPrice,
     readInputs,
     renderResult(data) {

@@ -1,23 +1,25 @@
 ---
-import { buildMeta, buildOrganizationJsonLd, hasPlaceholderOrganization } from "@repo/seo";
+import { buildMeta, buildOrganizationJsonLd, buildWebSiteJsonLd, hasPlaceholderOrganization } from "@repo/seo";
 import Layout from "@repo/ui/components/Layout.astro";
 import { siteConfig } from "../../site.config";
 import { footerColumns, footerTagline, navItems } from "../site-nav";
 import { getTool, tools } from "../tools";
 
 const meta = buildMeta(siteConfig, {
-  title: "Free Pricing & Profit Calculators for Small Business",
+  title: "The Business Calc: Free Pricing & Profit Calculators",
+  fullTitle: true,
   description:
-    "Free small-business calculators: break-even point, markup vs. margin, selling price, discounts, price increases, food cost and freelance hourly rate — with the formula behind every answer.",
+    "Free small-business calculators for break-even, markup vs. margin, pricing, discounts, food cost and freelance rates — with the formula behind every answer.",
   path: "/",
 });
 
 // Organization markup would publish an invented company name while the
 // config still holds the template placeholder, so it's omitted until a real
 // business name is set.
-const structuredData = hasPlaceholderOrganization(siteConfig)
-  ? []
-  : [buildOrganizationJsonLd(siteConfig)];
+const structuredData = [
+  buildWebSiteJsonLd(siteConfig),
+  ...(hasPlaceholderOrganization(siteConfig) ? [] : [buildOrganizationJsonLd(siteConfig)]),
+];
 
 const featured = {
   ...getTool("/break-even"),

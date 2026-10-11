@@ -14,7 +14,7 @@ import { formatUpdated, getTool, toolStructuredData } from "../tools";
 const tool = getTool("/contribution-margin");
 
 const meta = buildMeta(siteConfig, {
-  title: "Contribution Margin Calculator (Per Unit & Ratio)",
+  title: "Contribution Margin Calculator",
   description:
     "Calculate the contribution margin — in dollars and as a percentage — for a single product, given its selling price and variable cost.",
   path: "/contribution-margin",
@@ -77,7 +77,7 @@ const structuredData = toolStructuredData(tool, meta.description);
   </div>
 
   <div class="calc-grid">
-    <form id="calc-form" class="panel" novalidate>
+    <form id="calc-form" class="panel" data-calculator-id={tool.href.slice(1)} novalidate>
       <div class="preset-row">
         <span class="preset-label">Try an example</span>
         {
@@ -321,7 +321,6 @@ const structuredData = toolStructuredData(tool, meta.description);
   wireCalculatorForm({
     form,
     errorsEl,
-    calculatorId: "contribution-margin",
     calculate: calculateContributionMargin,
     readInputs,
     renderResult(data) {

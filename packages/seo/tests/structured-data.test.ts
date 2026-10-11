@@ -4,6 +4,7 @@ import {
   buildBreadcrumbJsonLd,
   buildOrganizationJsonLd,
   buildWebApplicationJsonLd,
+  buildWebSiteJsonLd,
 } from "../src/structured-data";
 
 const config = validateSiteConfig({
@@ -60,5 +61,14 @@ describe("buildOrganizationJsonLd", () => {
   it("uses the configured organization name", () => {
     const jsonLd = buildOrganizationJsonLd(config);
     expect(jsonLd.name).toBe("Example Org");
+  });
+});
+
+describe("buildWebSiteJsonLd", () => {
+  it("names the site at its canonical root URL", () => {
+    const jsonLd = buildWebSiteJsonLd(config);
+    expect(jsonLd["@type"]).toBe("WebSite");
+    expect(jsonLd.name).toBe("Example Calculator");
+    expect(jsonLd.url).toBe("https://example.com/");
   });
 });

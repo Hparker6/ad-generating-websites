@@ -14,7 +14,7 @@ import { formatUpdated, getTool, toolStructuredData } from "../tools";
 const tool = getTool("/markup-vs-margin");
 
 const meta = buildMeta(siteConfig, {
-  title: "Markup vs. Margin Calculator (With Formulas)",
+  title: "Markup vs. Margin Calculator",
   description:
     "Enter a unit cost and selling price to see both the markup percentage and the margin percentage — and understand why they're not the same number.",
   path: "/markup-vs-margin",
@@ -77,7 +77,7 @@ const structuredData = toolStructuredData(tool, meta.description);
   </div>
 
   <div class="calc-grid">
-    <form id="calc-form" class="panel" novalidate>
+    <form id="calc-form" class="panel" data-calculator-id={tool.href.slice(1)} novalidate>
       <div class="preset-row">
         <span class="preset-label">Try an example</span>
         {
@@ -362,7 +362,6 @@ const structuredData = toolStructuredData(tool, meta.description);
   wireCalculatorForm({
     form,
     errorsEl,
-    calculatorId: "markup-margin",
     calculate: calculateMarkupMargin,
     readInputs,
     renderResult(data) {

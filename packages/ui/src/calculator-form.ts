@@ -1,4 +1,4 @@
-import { trackEvent } from "./analytics.ts";
+import { createCalculatorTracker, trackEvent } from "./analytics.ts";
 import { readPrefillParams, wireCalculatorControls } from "./controls.ts";
 
 /**
@@ -11,7 +11,12 @@ type CalculatorResultLike<T> = { ok: true; data: T } | { ok: false; errors: stri
 export interface WireCalculatorFormOptions<T> {
   form: HTMLFormElement;
   errorsEl: HTMLElement;
-  calculatorId: string;
+  /**
+   * The tool's URL slug, sent with every event. Defaults to the form's
+   * `data-calculator-id` attribute, which pages set from the tool registry so
+   * the id always matches the URL.
+   */
+  calculatorId?: string;
   calculate: (input: unknown) => CalculatorResultLike<T>;
   readInputs: () => unknown;
   renderResult: (data: T) => void;
@@ -20,22 +25,28 @@ export interface WireCalculatorFormOptions<T> {
    * Defaults to the page's `.answer` element.
    */
   answerEl?: HTMLElement | null;
-  /** Delay before an analytics event fires after the user stops typing. */
+  /** Delay before a result is reported to analytics after the user stops typing. */
   debounceMs?: number;
 }
 
 /**
  * Wires a calculator form: recalculates and re-renders on every keystroke,
- * and fires a single debounced analytics event (never the raw input values)
- * once the user pauses. Shared by every calculator page so each one only
- * has to supply readInputs/renderResult, not reimplement this plumbing.
+ * and reports the result to analytics once the user pauses (never the raw
+ * input values). Which event that is — completion, adjustment, error — is
+ * decided by createCalculatorTracker. Shared by every calculator page so each
+ * one only has to supply readInputs/renderResult.
  */
 export function wireCalculatorForm<T>(options: WireCalculatorFormOptions<T>): void {
-  const { form, errorsEl, calculatorId, calculate, readInputs, renderResult, debounceMs = 400 } = options;
+  const { form, errorsEl, calculate, readInputs, renderResult, debounceMs = 400 } = options;
   const answerEl = options.answerEl ?? form.ownerDocument.querySelector<HTMLElement>(".answer");
+  const calculatorId = options.calculatorId ?? form.dataset.calculatorId;
+  if (!calculatorId) {
+    throw new Error("wireCalculatorForm: set calculatorId or data-calculator-id on the form");
+  }
+  const tracker = createCalculatorTracker(calculatorId, trackEvent);
 
-  let hasUserInteracted = false;
   let trackingTimer: ReturnType<typeof setTimeout> | undefined;
+  let pendingReport: (() => void) | undefined;
 
   // A link that carries inputs in its query string (shared by a reader, or
   // built by an AI agent) opens with those figures filled in. The address bar
@@ -69,6 +80,7 @@ export function wireCalculatorForm<T>(options: WireCalculatorFormOptions<T>): vo
       try {
         await navigator.clipboard.writeText(shareUrl());
         copyButton.textContent = "Link copied";
+        trackEvent("copy_link", { calculator_id: calculatorId });
       } catch {
         copyButton.textContent = "Couldn't copy — try again";
       }
@@ -109,38 +121,27 @@ export function wireCalculatorForm<T>(options: WireCalculatorFormOptions<T>): vo
     return result;
   }
 
-  function trackResult(result: CalculatorResultLike<T>) {
-    if (!hasUserInteracted) return;
-    if (result.ok) {
-      trackEvent("calculator_complete", { calculator_id: calculatorId });
-    } else {
-      trackEvent("calculator_error", {
-        calculator_id: calculatorId,
-        error_count: result.errors.length,
-      });
-    }
-  }
-
   wireCalculatorControls(form, (presetIndex) => {
     trackEvent("preset_select", { calculator_id: calculatorId, preset_index: presetIndex });
   });
 
-  // Delegated so the cross-calculator journey is measurable without shipping a
-  // second script to every page. Only the destination path is sent.
-  form.ownerDocument.addEventListener("click", (event) => {
-    const link = (event.target as Element | null)?.closest?.("a.next-step");
-    if (!link) return;
-    trackEvent("next_step_click", {
-      calculator_id: calculatorId,
-      destination: link.getAttribute("href") ?? "",
-    });
-  });
-
+  // Every input event is a user interaction (typing, steppers, sliders, and
+  // presets, which dispatch one). The result is reported after a pause, so
+  // typing "120" is one report, not three.
   form.addEventListener("input", () => {
-    hasUserInteracted = true;
     const result = updateDisplay();
     clearTimeout(trackingTimer);
-    trackingTimer = setTimeout(() => trackResult(result), debounceMs);
+    pendingReport = () => {
+      pendingReport = undefined;
+      tracker.userResult(result.ok ? { ok: true } : { ok: false, errorCount: result.errors.length });
+    };
+    trackingTimer = setTimeout(pendingReport, debounceMs);
+  });
+
+  // Leaving mid-pause would otherwise drop the report; send it now instead.
+  window.addEventListener("pagehide", () => {
+    clearTimeout(trackingTimer);
+    pendingReport?.();
   });
 
   // Browsers restore typed form values on back/forward navigation without
@@ -150,5 +151,9 @@ export function wireCalculatorForm<T>(options: WireCalculatorFormOptions<T>): vo
     updateDisplay();
   });
 
-  updateDisplay();
+  const initial = updateDisplay();
+  const prefilledCount = Object.keys(prefill).length;
+  if (prefilledCount > 0 && initial.ok) {
+    tracker.prefilledView(prefilledCount);
+  }
 }

@@ -65,6 +65,21 @@ export function buildBreadcrumbJsonLd(
   };
 }
 
+/**
+ * WebSite markup for the homepage. Google uses it to choose the site name
+ * shown above results ("The Business Calc" instead of the bare domain).
+ */
+export function buildWebSiteJsonLd(config: SiteConfig): Record<string, unknown> {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: config.siteName,
+    url: canonicalUrl(config, "/"),
+    description: config.defaultDescription,
+    inLanguage: config.locale,
+  };
+}
+
 export function buildOrganizationJsonLd(config: SiteConfig): Record<string, unknown> {
   return {
     "@context": "https://schema.org",

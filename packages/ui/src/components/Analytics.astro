@@ -47,8 +47,9 @@ const measurementId = config.analytics.ga4MeasurementId;
           ad_personalization: "granted",
         });
         gtag("js", new Date());
-        // anonymize_ip retained for user privacy; no PII or user-entered
-        // values are ever sent (see trackEvent in packages/ui/src/analytics.ts).
+        // No PII or user-entered values are ever sent (see trackEvent in
+        // packages/ui/src/analytics.ts). GA4 doesn't log or store IP addresses,
+        // so Universal Analytics' old anonymize_ip flag is not needed.
         // Calculator links can carry inputs in the query string, so the page
         // location reported to GA4 keeps only campaign parameters.
         var pageUrl = new URL(window.location.href);
@@ -56,7 +57,7 @@ const measurementId = config.analytics.ga4MeasurementId;
         pageUrl.searchParams.forEach(function (value, key) {
           if (/^utm_/.test(key) || key === "gclid") reportedUrl.searchParams.set(key, value);
         });
-        gtag("config", measurementId, { anonymize_ip: true, page_location: reportedUrl.toString() });
+        gtag("config", measurementId, { page_location: reportedUrl.toString() });
       </script>
     </Fragment>
   )

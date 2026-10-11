@@ -22,6 +22,8 @@ export interface Tool {
   /** Input ids, which double as URL query parameters for prefilling. */
   params: string[];
   group: "core" | "pricing";
+  /** A calculator (WebApplication markup) or a static reference page (breadcrumbs only). */
+  kind: "calculator" | "reference";
   /** ISO date the page's content was last revised. */
   updated: string;
 }
@@ -36,6 +38,7 @@ export const tools: Tool[] = [
     formula: "break-even units = fixed costs ÷ (price − variable cost per unit)",
     params: ["fixedCosts", "pricePerUnit", "variableCostPerUnit"],
     group: "core",
+    kind: "calculator",
     updated: "2026-10-06",
   },
   {
@@ -47,6 +50,7 @@ export const tools: Tool[] = [
     formula: "units needed = (fixed costs + profit goal) ÷ (price − variable cost per unit)",
     params: ["fixedCosts", "pricePerUnit", "variableCostPerUnit", "desiredProfit"],
     group: "core",
+    kind: "calculator",
     updated: "2026-10-06",
   },
   {
@@ -58,6 +62,7 @@ export const tools: Tool[] = [
     formula: "contribution margin = price − variable cost; ratio = contribution margin ÷ price",
     params: ["sellingPrice", "variableCost"],
     group: "core",
+    kind: "calculator",
     updated: "2026-10-06",
   },
   {
@@ -69,6 +74,7 @@ export const tools: Tool[] = [
     formula: "markup % = (price − cost) ÷ cost × 100; margin % = (price − cost) ÷ price × 100",
     params: ["unitCost", "sellingPrice"],
     group: "core",
+    kind: "calculator",
     updated: "2026-10-06",
   },
   {
@@ -80,6 +86,7 @@ export const tools: Tool[] = [
     formula: "price = cost ÷ (1 − target margin ÷ 100)",
     params: ["unitCost", "desiredMarginPercent"],
     group: "core",
+    kind: "calculator",
     updated: "2026-10-06",
   },
   {
@@ -91,6 +98,7 @@ export const tools: Tool[] = [
     formula: "margin = markup ÷ (1 + markup); markup = margin ÷ (1 − margin)",
     params: [],
     group: "pricing",
+    kind: "reference",
     updated: "2026-10-06",
   },
   {
@@ -102,6 +110,7 @@ export const tools: Tool[] = [
     formula: "extra volume % = (old profit per unit ÷ new profit per unit − 1) × 100",
     params: ["currentPrice", "unitCost", "discountPercent"],
     group: "pricing",
+    kind: "calculator",
     updated: "2026-10-06",
   },
   {
@@ -113,6 +122,7 @@ export const tools: Tool[] = [
     formula: "volume you can lose % = (1 − old profit per unit ÷ new profit per unit) × 100",
     params: ["currentPrice", "unitCost", "increasePercent"],
     group: "pricing",
+    kind: "calculator",
     updated: "2026-10-06",
   },
   {
@@ -124,6 +134,7 @@ export const tools: Tool[] = [
     formula: "menu price = plate cost ÷ (target food cost % ÷ 100)",
     params: ["plateCost", "targetFoodCostPercent"],
     group: "pricing",
+    kind: "calculator",
     updated: "2026-10-06",
   },
   {
@@ -135,6 +146,7 @@ export const tools: Tool[] = [
     formula: "hourly rate = (income ÷ (1 − tax rate) + expenses) ÷ (billable hours per week × weeks)",
     params: ["targetIncome", "annualExpenses", "taxRatePercent", "billableHoursPerWeek", "weeksPerYear"],
     group: "pricing",
+    kind: "calculator",
     updated: "2026-10-06",
   },
 ];
@@ -155,8 +167,17 @@ export function formatUpdated(iso: string): string {
   });
 }
 
-/** WebApplication + BreadcrumbList JSON-LD for a tool page. */
+/**
+ * JSON-LD for a tool page: BreadcrumbList always, plus WebApplication for
+ * interactive calculators. A static reference table isn't an application, so
+ * marking it as one would misdescribe the page.
+ */
 export function toolStructuredData(tool: Tool, description: string): Record<string, unknown>[] {
+  const breadcrumbs = buildBreadcrumbJsonLd(siteConfig, [
+    { name: "Home", path: "/" },
+    { name: tool.name, path: tool.href },
+  ]);
+  if (tool.kind === "reference") return [breadcrumbs];
   return [
     buildWebApplicationJsonLd(siteConfig, {
       name: tool.name,
@@ -165,9 +186,6 @@ export function toolStructuredData(tool: Tool, description: string): Record<stri
       applicationCategory: "BusinessApplication",
       dateModified: tool.updated,
     }),
-    buildBreadcrumbJsonLd(siteConfig, [
-      { name: "Home", path: "/" },
-      { name: tool.name, path: tool.href },
-    ]),
+    breadcrumbs,
   ];
 }

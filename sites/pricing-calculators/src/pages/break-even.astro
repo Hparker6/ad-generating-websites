@@ -19,7 +19,7 @@ import { formatUpdated, getTool, toolStructuredData } from "../tools";
 const tool = getTool("/break-even");
 
 const meta = buildMeta(siteConfig, {
-  title: "Break-Even Point Calculator (Units & Revenue)",
+  title: "Break-Even Calculator: Units & Revenue",
   description:
     "Find out how many units you need to sell to cover your costs. Enter fixed costs, price, and variable cost per unit.",
   path: "/break-even",
@@ -84,7 +84,7 @@ const structuredData = toolStructuredData(tool, meta.description);
   </div>
 
   <div class="calc-grid">
-    <form id="calc-form" class="panel" novalidate>
+    <form id="calc-form" class="panel" data-calculator-id={tool.href.slice(1)} novalidate>
       <div class="preset-row">
         <span class="preset-label">Try an example</span>
         {
@@ -403,7 +403,6 @@ const structuredData = toolStructuredData(tool, meta.description);
   wireCalculatorForm({
     form,
     errorsEl,
-    calculatorId: "break-even",
     calculate: calculateBreakEven,
     readInputs,
     renderResult(data) {

@@ -14,9 +14,9 @@ import { formatUpdated, getTool, toolStructuredData } from "../tools";
 const tool = getTool("/freelance-hourly-rate");
 
 const meta = buildMeta(siteConfig, {
-  title: "Freelance Hourly Rate Calculator (After Tax & Expenses)",
+  title: "Freelance Hourly Rate Calculator",
   description:
-    "Free freelance rate calculator: enter the take-home income you want, your expenses, tax rate and billable hours to get the hourly and day rate you need to charge.",
+    "Enter the take-home income you want, your expenses, tax rate and billable hours to get the hourly and day rate you need to charge as a freelancer.",
   path: tool.href,
 });
 
@@ -93,7 +93,7 @@ const structuredData = toolStructuredData(tool, meta.description);
   </div>
 
   <div class="calc-grid">
-    <form id="calc-form" class="panel" novalidate>
+    <form id="calc-form" class="panel" data-calculator-id={tool.href.slice(1)} novalidate>
       <div class="preset-row">
         <span class="preset-label">Try an example</span>
         {
@@ -314,7 +314,6 @@ const structuredData = toolStructuredData(tool, meta.description);
   wireCalculatorForm({
     form,
     errorsEl,
-    calculatorId: "freelance-rate",
     calculate: calculateFreelanceRate,
     readInputs,
     renderResult(data) {

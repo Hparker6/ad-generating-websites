@@ -14,9 +14,9 @@ import { formatUpdated, getTool, toolStructuredData } from "../tools";
 const tool = getTool("/discount-calculator");
 
 const meta = buildMeta(siteConfig, {
-  title: "Discount Profit Calculator: Extra Sales a Discount Needs",
+  title: "Discount Break-Even Calculator",
   description:
-    "Free discount calculator for businesses: see how many more units you must sell after a discount to keep the same gross profit, and what the discount does to your margin.",
+    "See how many more units you must sell after a discount to keep the same gross profit, and what the discount does to your margin. Free, with formulas.",
   path: tool.href,
 });
 
@@ -105,7 +105,7 @@ const scenarioRows = scenarioDiscounts.map((discount) => {
   </div>
 
   <div class="calc-grid">
-    <form id="calc-form" class="panel" novalidate>
+    <form id="calc-form" class="panel" data-calculator-id={tool.href.slice(1)} novalidate>
       <div class="preset-row">
         <span class="preset-label">Try an example</span>
         {
@@ -309,7 +309,6 @@ const scenarioRows = scenarioDiscounts.map((discount) => {
   wireCalculatorForm({
     form,
     errorsEl,
-    calculatorId: "discount",
     readInputs,
     // A negative discount would be a price increase; that has its own page.
     calculate: (input) => {

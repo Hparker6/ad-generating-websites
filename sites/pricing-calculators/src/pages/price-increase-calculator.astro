@@ -14,7 +14,7 @@ import { formatUpdated, getTool, toolStructuredData } from "../tools";
 const tool = getTool("/price-increase-calculator");
 
 const meta = buildMeta(siteConfig, {
-  title: "Price Increase Calculator: How Many Sales Can You Lose?",
+  title: "Price Increase Calculator",
   description:
     "Free price increase calculator: see how much sales volume you can lose after raising prices and still make the same gross profit, plus your new margin.",
   path: tool.href,
@@ -104,7 +104,7 @@ const structuredData = toolStructuredData(tool, meta.description);
   </div>
 
   <div class="calc-grid">
-    <form id="calc-form" class="panel" novalidate>
+    <form id="calc-form" class="panel" data-calculator-id={tool.href.slice(1)} novalidate>
       <div class="preset-row">
         <span class="preset-label">Try an example</span>
         {
@@ -306,7 +306,6 @@ const structuredData = toolStructuredData(tool, meta.description);
   wireCalculatorForm({
     form,
     errorsEl,
-    calculatorId: "price-increase",
     readInputs,
     // A negative increase is a discount; that has its own page.
     calculate: (input) => {

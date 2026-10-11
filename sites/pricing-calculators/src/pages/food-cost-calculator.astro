@@ -14,7 +14,7 @@ import { formatUpdated, getTool, toolStructuredData } from "../tools";
 const tool = getTool("/food-cost-calculator");
 
 const meta = buildMeta(siteConfig, {
-  title: "Food Cost Calculator & Menu Price Calculator",
+  title: "Food Cost & Menu Price Calculator",
   description:
     "Free restaurant food cost calculator: enter a dish's ingredient cost and target food cost percentage to get the menu price, gross profit per plate, and markup.",
   path: tool.href,
@@ -86,7 +86,7 @@ const structuredData = toolStructuredData(tool, meta.description);
   </div>
 
   <div class="calc-grid">
-    <form id="calc-form" class="panel" novalidate>
+    <form id="calc-form" class="panel" data-calculator-id={tool.href.slice(1)} novalidate>
       <div class="preset-row">
         <span class="preset-label">Try an example</span>
         {
@@ -271,7 +271,6 @@ const structuredData = toolStructuredData(tool, meta.description);
   wireCalculatorForm({
     form,
     errorsEl,
-    calculatorId: "food-cost",
     calculate: calculateFoodCost,
     readInputs,
     renderResult(data) {

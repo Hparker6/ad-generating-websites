@@ -15,7 +15,7 @@ import { formatUpdated, getTool, toolStructuredData } from "../tools";
 const tool = getTool("/target-profit");
 
 const meta = buildMeta(siteConfig, {
-  title: "Target Profit Calculator: Units to Hit a Profit Goal",
+  title: "Target Profit Calculator: Units Needed",
   description:
     "Calculate exactly how many units you need to sell — and the revenue that represents — to hit a specific profit goal.",
   path: "/target-profit",
@@ -93,7 +93,7 @@ const structuredData = toolStructuredData(tool, meta.description);
   </div>
 
   <div class="calc-grid">
-    <form id="calc-form" class="panel" novalidate>
+    <form id="calc-form" class="panel" data-calculator-id={tool.href.slice(1)} novalidate>
       <div class="preset-row">
         <span class="preset-label">Try an example</span>
         {
@@ -405,7 +405,6 @@ const structuredData = toolStructuredData(tool, meta.description);
   wireCalculatorForm({
     form,
     errorsEl,
-    calculatorId: "target-profit",
     calculate: calculateTargetProfit,
     readInputs,
     renderResult(data) {
