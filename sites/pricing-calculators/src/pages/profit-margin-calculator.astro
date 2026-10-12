@@ -1,0 +1,238 @@
+---
+import { calculateProfitMargin } from "@repo/calculators/profit-margin";
+import { formatCurrency, formatPercentValue } from "@repo/ui";
+import NumberField from "@repo/ui/components/NumberField.astro";
+import ToolPage from "../components/ToolPage.astro";
+
+const HREF = "/profit-margin-calculator";
+
+const defaults = { revenue: 100000, costOfGoodsSold: 60000, operatingExpenses: 25000, interestAndTaxes: 5000 };
+const seed = calculateProfitMargin(defaults);
+if (!seed.ok) throw new Error("Default profit-margin inputs must be valid");
+const r = seed.data;
+
+// Illustrative figures for trying the tool — not industry benchmarks.
+const presets = [
+  { label: "Retail shop", values: { revenue: 480000, costOfGoodsSold: 290000, operatingExpenses: 150000, interestAndTaxes: 12000 } },
+  { label: "Consultancy", values: { revenue: 220000, costOfGoodsSold: 30000, operatingExpenses: 120000, interestAndTaxes: 18000 } },
+  { label: "Single product", values: { revenue: 50, costOfGoodsSold: 30, operatingExpenses: 0, interestAndTaxes: 0 } },
+];
+
+const ladder = [
+  { key: "gross", label: "Gross margin", profitLabel: "Gross profit", profit: r.grossProfit, margin: r.grossMarginPercent, note: "after cost of goods sold" },
+  { key: "operating", label: "Operating margin", profitLabel: "Operating profit", profit: r.operatingProfit, margin: r.operatingMarginPercent, note: "after operating expenses" },
+  { key: "net", label: "Net margin", profitLabel: "Net profit", profit: r.netProfit, margin: r.netMarginPercent, note: "after interest and taxes" },
+];
+
+const faqs = [
+  {
+    question: "What's the difference between gross, operating, and net profit margin?",
+    answer:
+      "They measure profit at three points on the income statement. Gross margin subtracts only the cost of goods sold. Operating margin also subtracts the costs of running the business — rent, salaries, marketing. Net margin subtracts everything, including interest and taxes. Each is that profit divided by revenue.",
+  },
+  {
+    question: "What counts as cost of goods sold?",
+    answer:
+      "The direct cost of what you sold: materials, wholesale cost of products, and production labor. It doesn't include overhead like rent, office salaries, or advertising — those are operating expenses.",
+  },
+  {
+    question: "How do I calculate profit margin for a single product?",
+    answer:
+      "Enter the selling price as revenue and the product's cost as COGS, and leave the expense fields at zero. A $50 item that costs $30 has a gross margin of 40%. For a price that hits a target margin, use the selling price calculator instead.",
+  },
+  {
+    question: "Is profit margin the same as markup?",
+    answer:
+      "No. Margin divides profit by revenue; markup divides the same profit by cost, so markup is always the larger number. A 40% margin is a 66.7% markup. The markup vs. margin calculator converts between them.",
+  },
+  {
+    question: "What is a good profit margin?",
+    answer:
+      "It depends heavily on the industry — grocery retail and software run on very different margins, so a single \"good\" number would mislead. Compare against businesses like yours. NYU Stern's Aswath Damodaran publishes margins by sector, updated each year, if you want a reference point.",
+  },
+  {
+    question: "Can a profit margin be negative?",
+    answer:
+      "Yes. A negative margin means a loss at that level — for example, a negative operating margin means the business's running costs exceed its gross profit. The calculator shows negative results rather than rejecting them.",
+  },
+];
+---
+
+<ToolPage
+  href={HREF}
+  title="Profit Margin Calculator (Gross & Net)"
+  description="Calculate gross, operating, and net profit margin from revenue, cost of goods sold, and expenses — with each formula and a worked example."
+  formulaHeading="Profit margin formulas"
+  faqHeading="Profit margin FAQ"
+  faqs={faqs}
+  related={["/markup-vs-margin", "/selling-price", "/break-even"]}
+  next={{
+    href: "/selling-price",
+    title: "Selling Price Calculator",
+    description: "Know the margin you want? Work backward to the price you need to charge.",
+  }}
+  metaNote="Formulas follow standard income-statement definitions."
+>
+  <Fragment slot="lede">
+    Profit margin is profit ÷ revenue. Gross margin uses revenue minus cost of goods sold; operating and net margin
+    subtract running costs, then interest and taxes. $100,000 of revenue with $60,000 of COGS is a 40% gross margin.
+  </Fragment>
+
+  <div class="calc-grid">
+    <form id="calc-form" class="panel" data-calculator-id={HREF.slice(1)} novalidate>
+      <div class="preset-row">
+        <span class="preset-label">Try an example</span>
+        {
+          presets.map((preset) => (
+            <button type="button" class="preset" data-preset={JSON.stringify(preset.values)} aria-pressed="false">
+              {preset.label}
+            </button>
+          ))
+        }
+      </div>
+
+      <div class="field-stack">
+        <NumberField id="revenue" label="Revenue" prefix="$" value={defaults.revenue} min={0} hint="Total sales for the period, or one item's price." stepDelta={1000} />
+        <NumberField id="costOfGoodsSold" label="Cost of goods sold" prefix="$" value={defaults.costOfGoodsSold} min={0} hint="Materials, product cost, production labor." stepDelta={1000} />
+        <NumberField id="operatingExpenses" label="Operating expenses" prefix="$" value={defaults.operatingExpenses} min={0} hint="Rent, salaries, marketing, software. 0 if unknown." stepDelta={1000} />
+        <NumberField id="interestAndTaxes" label="Interest and taxes" prefix="$" value={defaults.interestAndTaxes} min={0} hint="Loan interest plus income tax. 0 for gross margin only." stepDelta={500} />
+      </div>
+
+      <ul id="form-errors" class="error-list" aria-live="polite"></ul>
+
+      <button type="button" class="copy-link" data-copy-link aria-live="polite">Copy link to this result</button>
+    </form>
+
+    <section class="answer" aria-label="Result" aria-live="polite">
+      <div class="answer-head">
+        <span class="answer-label">Net profit margin</span>
+        <strong class="answer-value is-positive" id="answer-value">{formatPercentValue(r.netMarginPercent)}</strong>
+        <p class="answer-sentence" id="answer-sentence">
+          of revenue is left as profit after every expense — {formatCurrency(r.netProfit)}.
+        </p>
+      </div>
+
+      <div class="equation" data-label="Why">
+        <span class="eq-term">
+          <span class="eq-value" id="eq-profit">{formatCurrency(r.netProfit)}</span>
+          <span class="eq-name">Net profit</span>
+        </span>
+        <span class="eq-op" aria-hidden="true">÷</span>
+        <span class="visually-hidden">divided by</span>
+        <span class="eq-term">
+          <span class="eq-value" id="eq-revenue">{formatCurrency(defaults.revenue)}</span>
+          <span class="eq-name">Revenue</span>
+        </span>
+        <span class="eq-op" aria-hidden="true">=</span>
+        <span class="visually-hidden">equals</span>
+        <span class="eq-term is-result">
+          <span class="eq-value" id="eq-margin">{formatPercentValue(r.netMarginPercent)}</span>
+          <span class="eq-name">Net margin</span>
+        </span>
+      </div>
+
+      <div class="scenarios">
+        <h2>All three margins</h2>
+        <ul class="scenario-list">
+          {
+            ladder.map((row) => (
+              <li>
+                <span>
+                  {row.label} <span class="field-hint">{row.note}</span>
+                </span>
+                <span class="scenario-value">
+                  <span id={`${row.key}-margin`}>{formatPercentValue(row.margin)}</span> ·{" "}
+                  <span id={`${row.key}-profit`}>{formatCurrency(row.profit)}</span>
+                </span>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+
+      <p class="answer-implication" id="answer-implication">
+        Your gross profit is a <strong>{r.markupPercent === null ? "—" : formatPercentValue(r.markupPercent)}</strong>
+        markup on cost of goods sold. Markup and margin describe the same profit differently — see the
+        <a href="/markup-vs-margin">markup vs. margin calculator</a>.
+      </p>
+    </section>
+  </div>
+
+  <Fragment slot="formula">
+    <code class="formula">gross margin % = (revenue − cost of goods sold) ÷ revenue × 100</code>
+    <code class="formula">operating margin % = (gross profit − operating expenses) ÷ revenue × 100</code>
+    <code class="formula">net margin % = (operating profit − interest and taxes) ÷ revenue × 100</code>
+    <p>
+      Each margin divides a different level of profit by the same revenue, so they can only fall as you move down
+      the income statement. Use figures for the same period — a month, a quarter, or a year.
+    </p>
+
+    <h3>Worked example</h3>
+    <dl class="example-rows">
+      <div class="example-row"><dt>Revenue</dt><dd>$100,000</dd></div>
+      <div class="example-row"><dt>− Cost of goods sold</dt><dd>$60,000 → gross profit $40,000 (40%)</dd></div>
+      <div class="example-row"><dt>− Operating expenses</dt><dd>$25,000 → operating profit $15,000 (15%)</dd></div>
+      <div class="example-row"><dt>− Interest and taxes</dt><dd>$5,000 → net profit $10,000</dd></div>
+      <div class="example-row is-result"><dt>Net profit margin</dt><dd>$10,000 ÷ $100,000 = 10%</dd></div>
+    </dl>
+    <p>
+      For sector averages, see Aswath Damodaran's
+      <a href="https://pages.stern.nyu.edu/~adamodar/New_Home_Page/datafile/margin.html" rel="noopener">operating and net margins by industry</a>
+      (NYU Stern, updated annually).
+    </p>
+  </Fragment>
+</ToolPage>
+
+<script>
+  import { calculateProfitMargin } from "@repo/calculators/profit-margin";
+  import { formatCurrency, formatPercentValue, readNumericField, wireCalculatorForm } from "@repo/ui";
+
+  const form = document.getElementById("calc-form") as HTMLFormElement;
+  const errorsEl = document.getElementById("form-errors") as HTMLUListElement;
+  const byId = (id: string) => document.getElementById(id)!;
+  const value = (id: string) => readNumericField(id);
+
+  function readInputs() {
+    return {
+      revenue: value("revenue"),
+      costOfGoodsSold: value("costOfGoodsSold"),
+      operatingExpenses: value("operatingExpenses"),
+      interestAndTaxes: value("interestAndTaxes"),
+    };
+  }
+
+  wireCalculatorForm({
+    form,
+    errorsEl,
+    calculate: calculateProfitMargin,
+    readInputs,
+    renderResult(data) {
+      const loss = data.netProfit < 0;
+      const answer = byId("answer-value");
+      answer.textContent = formatPercentValue(data.netMarginPercent);
+      answer.classList.toggle("is-negative", loss);
+      answer.classList.toggle("is-positive", !loss);
+      byId("answer-sentence").textContent = loss
+        ? `of revenue — a net loss of ${formatCurrency(Math.abs(data.netProfit))} after every expense.`
+        : `of revenue is left as profit after every expense — ${formatCurrency(data.netProfit)}.`;
+
+      byId("eq-profit").textContent = formatCurrency(data.netProfit);
+      byId("eq-revenue").textContent = formatCurrency(readInputs().revenue);
+      byId("eq-margin").textContent = formatPercentValue(data.netMarginPercent);
+
+      const rows: [string, number, number][] = [
+        ["gross", data.grossMarginPercent, data.grossProfit],
+        ["operating", data.operatingMarginPercent, data.operatingProfit],
+        ["net", data.netMarginPercent, data.netProfit],
+      ];
+      for (const [key, margin, profit] of rows) {
+        byId(`${key}-margin`).textContent = formatPercentValue(margin);
+        byId(`${key}-profit`).textContent = formatCurrency(profit);
+        byId(`${key}-margin`).parentElement!.classList.toggle("is-negative", profit < 0);
+      }
+
+      byId("answer-implication").querySelector("strong")!.textContent =
+        data.markupPercent === null ? "—" : formatPercentValue(data.markupPercent);
+    },
+  });
+</script>

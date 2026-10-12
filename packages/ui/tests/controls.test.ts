@@ -79,12 +79,16 @@ describe("readPrefillParams", () => {
       "1,000",
       "<script>",
       "Infinity",
-      "",
       "9".repeat(50),
     ];
     for (const value of hostile) {
       expect(readPrefillParams(`?unitCost=${encodeURIComponent(value)}`, fields)).toEqual({});
     }
+  });
+
+  it("returns an empty string for an explicitly empty parameter, so it clears the field", () => {
+    expect(readPrefillParams("?unitCost=&sellingPrice=5", fields)).toEqual({ unitCost: "", sellingPrice: "5" });
+    expect(readPrefillParams("?unitCost=%20%20", fields)).toEqual({ unitCost: "" });
   });
 
   it("allows negatives and leading-dot decimals, leaving range checks to the schema", () => {

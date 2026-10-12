@@ -1,0 +1,89 @@
+---
+/**
+ * The shared shell for a tool page: heading, lede, updated line, the
+ * calculator (default slot), the formula band, FAQ, related tools, and next
+ * step — with metadata and JSON-LD built from the tool registry. A new page
+ * supplies only what is unique to it.
+ *
+ * Slots: default (calculator + any result bands), "lede", "formula".
+ */
+import { buildMeta } from "@repo/seo";
+import AdSlot from "@repo/ui/components/AdSlot.astro";
+import FaqList from "@repo/ui/components/FaqList.astro";
+import Layout from "@repo/ui/components/Layout.astro";
+import NextStep from "@repo/ui/components/NextStep.astro";
+import type { FaqItem } from "@repo/ui";
+import { siteConfig } from "../../site.config";
+import { footerColumns, footerTagline, navItems } from "../site-nav";
+import { formatUpdated, getTool, toolStructuredData } from "../tools";
+import MoreTools from "./MoreTools.astro";
+
+interface Props {
+  /** Registry path, e.g. "/profit-margin-calculator". */
+  href: string;
+  /** <title> text before " | Site Name"; keep the whole title ≤ 60 characters. */
+  title: string;
+  description: string;
+  /** Margin label for the formula band, e.g. "Profit margin formulas". */
+  formulaHeading: string;
+  faqHeading: string;
+  faqs: FaqItem[];
+  related: string[];
+  next: { href: string; title: string; description: string };
+  /** Short provenance note after the updated date. */
+  metaNote?: string;
+}
+
+const { href, title, description, formulaHeading, faqHeading, faqs, related, next, metaNote } = Astro.props;
+const tool = getTool(href);
+const meta = buildMeta(siteConfig, { title, description, path: tool.href });
+const structuredData = toolStructuredData(tool, description);
+---
+
+<Layout
+  config={siteConfig}
+  meta={meta}
+  structuredData={structuredData}
+  navItems={navItems}
+  footerColumns={footerColumns}
+  footerTagline={footerTagline}
+>
+  <div class="page-header">
+    <h1 class="page-title">{tool.name}</h1>
+    <p class="lede"><slot name="lede" /></p>
+    <p class="page-meta">
+      Updated <time datetime={tool.updated}>{formatUpdated(tool.updated)}</time>{metaNote && ` · ${metaNote}`}
+    </p>
+  </div>
+
+  <slot />
+
+  <section class="band">
+    <h2 class="band-label">{formulaHeading}</h2>
+    <details class="show-math" open>
+      <summary><span class="chevron" aria-hidden="true"></span>Formula and worked example</summary>
+      <div class="show-math-body">
+        <slot name="formula" />
+      </div>
+    </details>
+  </section>
+
+  <AdSlot
+    enabled={siteConfig.ads.enabled}
+    clientId={siteConfig.ads.clientId}
+    slotId={siteConfig.ads.inContentSlotId}
+    height="250px"
+  />
+
+  <section class="band">
+    <h2 class="band-label">{faqHeading}</h2>
+    <FaqList faqs={faqs} />
+  </section>
+
+  <MoreTools hrefs={related} />
+
+  <section class="band">
+    <div class="band-label">Next</div>
+    <NextStep href={next.href} title={next.title} description={next.description} />
+  </section>
+</Layout>

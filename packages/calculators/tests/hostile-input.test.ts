@@ -7,6 +7,8 @@ import { calculateTargetProfit } from "../src/target-profit/index.ts";
 import { calculatePriceChange } from "../src/price-change/index.ts";
 import { calculateFreelanceRate } from "../src/freelance-rate/index.ts";
 import { calculateFoodCost } from "../src/food-cost/index.ts";
+import { calculateProfitMargin } from "../src/profit-margin/index.ts";
+import { calculateRecipeCost } from "../src/recipe-cost/index.ts";
 
 /**
  * Every calculator takes `unknown` and is the last line of defence between a
@@ -59,6 +61,22 @@ const CALCULATORS = [
     run: calculateFoodCost,
     valid: { plateCost: 4.5, targetFoodCostPercent: 30 },
   },
+  {
+    name: "profit-margin",
+    run: calculateProfitMargin,
+    valid: { revenue: 100000, costOfGoodsSold: 60000, operatingExpenses: 25000, interestAndTaxes: 5000 },
+  },
+  {
+    name: "recipe-cost",
+    run: calculateRecipeCost,
+    valid: {
+      ingredients: [{ packagePrice: 4, packageSize: 2000, amountUsed: 500, yieldPercent: 100 }],
+      servings: 8,
+      targetFoodCostPercent: 30,
+    },
+    // Optional by design: leaving it out (undefined) is a valid input.
+    optional: ["targetFoodCostPercent"],
+  },
 ] as const;
 
 /** Values that must never be accepted in place of a number. */
@@ -94,6 +112,8 @@ describe("calculator input boundary rejects hostile values", () => {
     const fields = Object.keys(calc.valid);
     for (const field of fields) {
       for (const [label, value] of HOSTILE_VALUES) {
+        const optional: readonly string[] = "optional" in calc ? calc.optional : [];
+        if (value === undefined && optional.includes(field)) continue;
         it(`${calc.name}: rejects ${label} for ${field}`, () => {
           const result = calc.run({ ...calc.valid, [field]: value } as unknown);
           expect(result.ok, `${label} was accepted for ${field}`).toBe(false);

@@ -54,4 +54,5 @@ jobs:
       site-filter: site-pricing-calculators
       site-dist-path: sites/pricing-calculators/dist
       cloudflare-project-name: pricing-calculators
+      check-domain: thebusinesscalc.com
     secrets: inherit

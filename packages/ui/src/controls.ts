@@ -39,13 +39,22 @@ export function readNumericField(id: string, doc: Document = document): number {
  * inputs filled in. Only ids in `fieldIds` are considered, and only plain
  * finite decimal numbers are returned — anything else in the URL is ignored
  * rather than written into the form.
+ *
+ * An explicitly empty parameter (`?ing2Price=`) returns "", which clears a
+ * field that has a default value — so a shared link reproduces a form where
+ * the sender deliberately emptied a field.
  */
 export function readPrefillParams(search: string, fieldIds: readonly string[]): Record<string, string> {
   const params = new URLSearchParams(search);
   const prefill: Record<string, string> = {};
   for (const id of fieldIds) {
-    const raw = params.get(id)?.trim();
-    if (!raw || raw.length > 20 || !/^-?\d*\.?\d+$/.test(raw)) continue;
+    if (!params.has(id)) continue;
+    const raw = (params.get(id) ?? "").trim();
+    if (raw === "") {
+      prefill[id] = "";
+      continue;
+    }
+    if (raw.length > 20 || !/^-?\d*\.?\d+$/.test(raw)) continue;
     if (!Number.isFinite(Number(raw))) continue;
     prefill[id] = raw;
   }

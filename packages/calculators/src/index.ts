@@ -8,3 +8,5 @@ export * from "./selling-price/index.ts";
 export * from "./price-change/index.ts";
 export * from "./freelance-rate/index.ts";
 export * from "./food-cost/index.ts";
+export * from "./profit-margin/index.ts";
+export * from "./recipe-cost/index.ts";

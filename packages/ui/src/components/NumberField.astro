@@ -1,0 +1,52 @@
+---
+/**
+ * One labelled number input in the calculators' standard markup: optional
+ * −/+ steppers, a "$" or "%" affix, and a hint. The id doubles as the URL
+ * query parameter used to prefill the field (see readPrefillParams).
+ */
+interface Props {
+  id: string;
+  label: string;
+  value?: number | string;
+  min?: number;
+  max?: number;
+  step?: number | "any";
+  /** Text shown before the number, e.g. "$". */
+  prefix?: string;
+  /** Text shown after the number, e.g. "%". */
+  suffix?: string;
+  hint?: string;
+  /** Adds −/+ buttons that move the value by this much. */
+  stepDelta?: number;
+}
+
+const { id, label, value, min, max, step = "any", prefix, suffix, hint, stepDelta } = Astro.props;
+const hintId = hint ? `${id}-hint` : undefined;
+const lowerLabel = label.toLowerCase();
+---
+
+<div class="field">
+  <label for={id}>{label}</label>
+  <div class="input-row">
+    {
+      stepDelta && (
+        <button type="button" class="stepper" data-step-for={id} data-step-delta={-stepDelta} aria-label={`Decrease ${lowerLabel} by ${stepDelta}`}>
+          −
+        </button>
+      )
+    }
+    <div class="input-affix">
+      {prefix && <span class="affix affix-start" aria-hidden="true">{prefix}</span>}
+      <input type="number" id={id} name={id} min={min} max={max} step={step} value={value} inputmode="decimal" aria-describedby={hintId} />
+      {suffix && <span class="affix affix-end" aria-hidden="true">{suffix}</span>}
+    </div>
+    {
+      stepDelta && (
+        <button type="button" class="stepper" data-step-for={id} data-step-delta={stepDelta} aria-label={`Increase ${lowerLabel} by ${stepDelta}`}>
+          +
+        </button>
+      )
+    }
+  </div>
+  {hint && <span class="field-hint" id={hintId}>{hint}</span>}
+</div>

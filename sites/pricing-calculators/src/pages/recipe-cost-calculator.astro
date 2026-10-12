@@ -1,0 +1,275 @@
+---
+import { calculateRecipeCost } from "@repo/calculators/recipe-cost";
+import { formatCurrency, formatPercentValue } from "@repo/ui";
+import NumberField from "@repo/ui/components/NumberField.astro";
+import ToolPage from "../components/ToolPage.astro";
+
+const HREF = "/recipe-cost-calculator";
+/** Fixed row count keeps links with inputs (ing1Price=…) and "copy link" working without dynamic rows. */
+const ROWS = 6;
+
+const exampleRows = [
+  { name: "Flour", packagePrice: 4, packageSize: 2000, amountUsed: 500, yieldPercent: 100 },
+  { name: "Butter", packagePrice: 5, packageSize: 454, amountUsed: 113, yieldPercent: 100 },
+  { name: "Eggs", packagePrice: 3.6, packageSize: 12, amountUsed: 3, yieldPercent: 100 },
+];
+const defaults = { servings: 8, targetFoodCostPercent: 30 };
+
+const seed = calculateRecipeCost({ ingredients: exampleRows, ...defaults });
+if (!seed.ok) throw new Error("Default recipe inputs must be valid");
+const r = seed.data;
+
+const rows = Array.from({ length: ROWS }, (_, i) => ({ n: i + 1, ...exampleRows[i] }));
+
+type PresetRow = [name: string, price: number, size: number, used: number, yieldPercent: number];
+
+/** A preset sets every row — names too — and blanks the rest, so no stale values linger. */
+function preset(label: string, items: PresetRow[], servings: number, targetFoodCostPercent: number) {
+  const values: Record<string, string | number> = { servings, targetFoodCostPercent };
+  for (let n = 1; n <= ROWS; n++) {
+    const item = items[n - 1];
+    values[`ing${n}Name`] = item ? item[0] : "";
+    values[`ing${n}Price`] = item ? item[1] : "";
+    values[`ing${n}Size`] = item ? item[2] : "";
+    values[`ing${n}Used`] = item ? item[3] : "";
+    values[`ing${n}Yield`] = item ? item[4] : 100;
+  }
+  return { label, values };
+}
+
+const presets = [
+  preset("Pancakes (8)", [["Flour (g)", 4, 2000, 250, 100], ["Eggs (each)", 3.6, 12, 2, 100], ["Milk (ml)", 3.5, 1900, 450, 100]], 8, 25),
+  preset("Steak plate", [["Tenderloin (oz)", 21, 16, 8, 70], ["Carrots (g)", 2, 1000, 200, 80], ["Butter (g)", 5, 454, 15, 100]], 1, 35),
+];
+
+const faqs = [
+  {
+    question: "How do I calculate the cost of a recipe?",
+    answer:
+      "For each ingredient, divide the package price by the package size to get a unit cost, multiply by the amount the recipe uses, then add every ingredient together. Divide that batch cost by the number of servings for the cost per serving.",
+  },
+  {
+    question: "What is yield percentage and when should I change it?",
+    answer:
+      "Yield is the share of an ingredient you can actually use after trimming, peeling, or deboning. A tenderloin that trims from 1 lb to 0.7 lb has a 70% yield, so each usable pound costs more than you paid. Leave it at 100% for ingredients you use whole, like flour or eggs.",
+  },
+  {
+    question: "Does the amount used need to match the package unit?",
+    answer:
+      "Yes. If the package size is in grams, enter the amount used in grams; if you bought a dozen eggs, enter the package size as 12 and the amount as the number of eggs. The calculator doesn't convert between units, so mixing ounces and grams will give a wrong cost.",
+  },
+  {
+    question: "How do I turn recipe cost into a menu price?",
+    answer:
+      "Enter a target food cost percentage — the share of the menu price you want ingredients to take. The suggested price is cost per serving divided by that percentage. For a single plate cost you already know, the food cost calculator does the same step on its own.",
+  },
+  {
+    question: "Are my ingredient names saved or sent anywhere?",
+    answer:
+      "No. Everything you type stays in your browser. Names are never sent anywhere, and the \"copy link\" button shares only the numbers, so you can bookmark a costed recipe.",
+  },
+];
+---
+
+<ToolPage
+  href={HREF}
+  title="Recipe Cost Calculator: Cost per Serving"
+  description="Cost a recipe ingredient by ingredient — including trim yield — to get batch cost, cost per serving, and a suggested menu price. Free, in your browser."
+  formulaHeading="Recipe costing formula"
+  faqHeading="Recipe cost FAQ"
+  faqs={faqs}
+  related={["/food-cost-calculator", "/markup-margin-chart", "/price-increase-calculator"]}
+  next={{
+    href: "/food-cost-calculator",
+    title: "Food Cost & Menu Price Calculator",
+    description: "Have a plate cost already? Set its menu price from a target food cost percentage.",
+  }}
+  metaNote="Method follows standard culinary costing (as-purchased ÷ yield)."
+>
+  <Fragment slot="lede">
+    Recipe cost = each ingredient's share of its package price, divided by its usable yield, added up. Divide by
+    servings for cost per serving. Flour, butter, and eggs for 8 servings come to about 39¢ each.
+  </Fragment>
+
+  <div class="calc-grid">
+    <form id="calc-form" class="panel" data-calculator-id={HREF.slice(1)} novalidate>
+      <div class="preset-row">
+        <span class="preset-label">Try an example</span>
+        {
+          presets.map((preset) => (
+            <button type="button" class="preset" data-preset={JSON.stringify(preset.values)} aria-pressed="false">
+              {preset.label}
+            </button>
+          ))
+        }
+      </div>
+
+      <fieldset class="ingredient-table">
+        <legend>Ingredients</legend>
+        <p class="field-hint">Use the same unit for package size and amount used (both grams, both ounces, or both "each"). Leave unused rows blank.</p>
+        <div class="ingredient-head" aria-hidden="true">
+          <span>Ingredient</span><span>Package price</span><span>Package size</span><span>Amount used</span><span>Yield %</span><span>Cost</span>
+        </div>
+        {
+          rows.map((row) => (
+            <div class="ingredient-row">
+              <input type="text" id={`ing${row.n}Name`} aria-label={`Ingredient ${row.n} name`} placeholder={`Ingredient ${row.n}`} value={row.name ?? ""} autocomplete="off" />
+              <div class="input-affix">
+                <span class="affix affix-start" aria-hidden="true">$</span>
+                <input type="number" id={`ing${row.n}Price`} aria-label={`Ingredient ${row.n} package price`} min="0" step="any" inputmode="decimal" value={row.packagePrice} />
+              </div>
+              <input type="number" id={`ing${row.n}Size`} aria-label={`Ingredient ${row.n} package size`} min="0" step="any" inputmode="decimal" value={row.packageSize} />
+              <input type="number" id={`ing${row.n}Used`} aria-label={`Ingredient ${row.n} amount used`} min="0" step="any" inputmode="decimal" value={row.amountUsed} />
+              <input type="number" id={`ing${row.n}Yield`} aria-label={`Ingredient ${row.n} yield percent`} min="1" max="100" step="any" inputmode="decimal" value={row.yieldPercent ?? 100} />
+              <output id={`ing${row.n}Cost`} for={`ing${row.n}Price ing${row.n}Size ing${row.n}Used ing${row.n}Yield`}>
+                {row.n <= exampleRows.length ? formatCurrency(r.ingredientCosts[row.n - 1] ?? 0) : "—"}
+              </output>
+            </div>
+          ))
+        }
+      </fieldset>
+
+      <div class="field-stack">
+        <NumberField id="servings" label="Servings" value={defaults.servings} min={0} stepDelta={1} />
+        <NumberField id="targetFoodCostPercent" label="Target food cost (optional)" suffix="%" value={defaults.targetFoodCostPercent} min={1} max={100} hint="Share of the menu price spent on ingredients. Blank for cost only." stepDelta={1} />
+      </div>
+
+      <ul id="form-errors" class="error-list" aria-live="polite"></ul>
+
+      <button type="button" class="copy-link" data-copy-link aria-live="polite">Copy link to this result</button>
+    </form>
+
+    <section class="answer" aria-label="Result" aria-live="polite">
+      <div class="answer-head">
+        <span class="answer-label">Cost per serving</span>
+        <strong class="answer-value" id="answer-value">{formatCurrency(r.costPerServing)}</strong>
+        <p class="answer-sentence" id="answer-sentence">
+          across {defaults.servings} servings, from a batch cost of {formatCurrency(r.batchCost)}.
+        </p>
+      </div>
+
+      <div class="equation" data-label="Why">
+        <span class="eq-term">
+          <span class="eq-value" id="eq-batch">{formatCurrency(r.batchCost)}</span>
+          <span class="eq-name">Batch cost</span>
+        </span>
+        <span class="eq-op" aria-hidden="true">÷</span>
+        <span class="visually-hidden">divided by</span>
+        <span class="eq-term">
+          <span class="eq-value" id="eq-servings">{defaults.servings}</span>
+          <span class="eq-name">Servings</span>
+        </span>
+        <span class="eq-op" aria-hidden="true">=</span>
+        <span class="visually-hidden">equals</span>
+        <span class="eq-term is-result">
+          <span class="eq-value" id="eq-serving">{formatCurrency(r.costPerServing)}</span>
+          <span class="eq-name">Per serving</span>
+        </span>
+      </div>
+
+      <div class="answer-metrics">
+        <div class="metric">
+          <span class="metric-label">Suggested menu price</span>
+          <span class="metric-value" id="metric-price">{r.suggestedMenuPrice === null ? "—" : formatCurrency(r.suggestedMenuPrice)}</span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">At target food cost</span>
+          <span class="metric-value" id="metric-target">{formatPercentValue(defaults.targetFoodCostPercent, 0)}</span>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <Fragment slot="formula">
+    <code class="formula">ingredient cost = package price × amount used ÷ package size ÷ (yield % ÷ 100)</code>
+    <code class="formula">cost per serving = sum of ingredient costs ÷ servings</code>
+    <code class="formula">menu price = cost per serving ÷ (target food cost % ÷ 100)</code>
+    <p>
+      Dividing by yield turns the as-purchased cost into the edible-portion cost — what each usable unit really
+      costs after trim and waste. This is the standard method taught in culinary programs, such as the Culinary
+      Institute of America's
+      <a href="https://ciachef.edu/wp-content/uploads/2024/07/kitchen-calculations.pdf" rel="noopener">kitchen calculations</a>.
+    </p>
+
+    <h3>Worked example</h3>
+    <dl class="example-rows">
+      <div class="example-row"><dt>Flour: $4.00 for 2,000 g, use 500 g</dt><dd>$4.00 × 500 ÷ 2,000 = $1.00</dd></div>
+      <div class="example-row"><dt>Butter: $5.00 for 454 g, use 113 g</dt><dd>$1.24</dd></div>
+      <div class="example-row"><dt>Eggs: $3.60 for 12, use 3</dt><dd>$0.90</dd></div>
+      <div class="example-row"><dt>Batch cost ÷ 8 servings</dt><dd>$3.14 ÷ 8 = $0.39</dd></div>
+      <div class="example-row is-result"><dt>Menu price at 30% food cost</dt><dd>$0.39 ÷ 0.30 = $1.31</dd></div>
+    </dl>
+    <p>
+      With trim: beef tenderloin at $21.00 per lb and a 70% yield costs $21.00 ÷ 0.70 = $30.00 per usable pound.
+    </p>
+  </Fragment>
+</ToolPage>
+
+<script>
+  import { calculateRecipeCost } from "@repo/calculators/recipe-cost";
+  import { formatCurrency, formatPercentValue, readNumericField, wireCalculatorForm } from "@repo/ui";
+
+  const ROWS = 6;
+  const form = document.getElementById("calc-form") as HTMLFormElement;
+  const errorsEl = document.getElementById("form-errors") as HTMLUListElement;
+  const byId = (id: string) => document.getElementById(id)!;
+  const value = (id: string) => readNumericField(id);
+  const blank = (id: string) => (document.getElementById(id) as HTMLInputElement).value.trim() === "";
+
+  /** Rows with no price, size, or amount are skipped; the row numbers of the rest are kept for display. */
+  function usedRows(): number[] {
+    const used: number[] = [];
+    for (let n = 1; n <= ROWS; n++) {
+      if (!(blank(`ing${n}Price`) && blank(`ing${n}Size`) && blank(`ing${n}Used`))) used.push(n);
+    }
+    return used;
+  }
+
+  function readInputs() {
+    const target = blank("targetFoodCostPercent") ? undefined : value("targetFoodCostPercent");
+    return {
+      ingredients: usedRows().map((n) => ({
+        packagePrice: value(`ing${n}Price`),
+        packageSize: value(`ing${n}Size`),
+        amountUsed: value(`ing${n}Used`),
+        yieldPercent: value(`ing${n}Yield`),
+      })),
+      servings: value("servings"),
+      ...(target === undefined ? {} : { targetFoodCostPercent: target }),
+    };
+  }
+
+  wireCalculatorForm({
+    form,
+    errorsEl,
+    readInputs,
+    // Error messages name the row as entered, not its position among filled rows.
+    calculate: (input) => {
+      const result = calculateRecipeCost(input);
+      if (result.ok) return result;
+      const rowNumbers = usedRows();
+      return {
+        ok: false,
+        errors: result.errors.map((message) =>
+          message.replace(/^Ingredient (\d+):/, (_, i) => `Ingredient ${rowNumbers[Number(i) - 1] ?? i}:`)
+        ),
+      };
+    },
+    renderResult(data) {
+      const input = readInputs();
+      const rowNumbers = usedRows();
+      for (let n = 1; n <= ROWS; n++) {
+        const position = rowNumbers.indexOf(n);
+        byId(`ing${n}Cost`).textContent = position === -1 ? "—" : formatCurrency(data.ingredientCosts[position] ?? 0);
+      }
+      byId("answer-value").textContent = formatCurrency(data.costPerServing);
+      byId("answer-sentence").textContent = `across ${input.servings} serving${input.servings === 1 ? "" : "s"}, from a batch cost of ${formatCurrency(data.batchCost)}.`;
+      byId("eq-batch").textContent = formatCurrency(data.batchCost);
+      byId("eq-servings").textContent = String(input.servings);
+      byId("eq-serving").textContent = formatCurrency(data.costPerServing);
+      byId("metric-price").textContent = data.suggestedMenuPrice === null ? "—" : formatCurrency(data.suggestedMenuPrice);
+      byId("metric-target").textContent =
+        input.targetFoodCostPercent === undefined ? "Not set" : formatPercentValue(input.targetFoodCostPercent, 0);
+    },
+  });
+</script>

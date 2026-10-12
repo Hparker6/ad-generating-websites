@@ -67,7 +67,11 @@ export function wireCalculatorForm<T>(options: WireCalculatorFormOptions<T>): vo
   function shareUrl(): string {
     const url = new URL(window.location.pathname, window.location.origin);
     for (const field of numberFields) {
-      if (field.value.trim() !== "") url.searchParams.set(field.id, field.value.trim());
+      const current = field.value.trim();
+      // A cleared field is only worth encoding when it would otherwise reopen
+      // with its default value (e.g. an example row the sender emptied).
+      if (current !== "") url.searchParams.set(field.id, current);
+      else if (field.defaultValue.trim() !== "") url.searchParams.set(field.id, "");
     }
     return url.toString();
   }
@@ -152,7 +156,7 @@ export function wireCalculatorForm<T>(options: WireCalculatorFormOptions<T>): vo
   });
 
   const initial = updateDisplay();
-  const prefilledCount = Object.keys(prefill).length;
+  const prefilledCount = Object.values(prefill).filter((value) => value !== "").length;
   if (prefilledCount > 0 && initial.ok) {
     tracker.prefilledView(prefilledCount);
   }

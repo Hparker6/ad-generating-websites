@@ -14,7 +14,9 @@
     "./selling-price": "./src/selling-price/index.ts",
     "./price-change": "./src/price-change/index.ts",
     "./freelance-rate": "./src/freelance-rate/index.ts",
-    "./food-cost": "./src/food-cost/index.ts"
+    "./food-cost": "./src/food-cost/index.ts",
+    "./profit-margin": "./src/profit-margin/index.ts",
+    "./recipe-cost": "./src/recipe-cost/index.ts"
   },
   "scripts": {
     "test": "vitest run",

@@ -90,6 +90,18 @@ export const tools: Tool[] = [
     updated: "2026-10-06",
   },
   {
+    href: "/profit-margin-calculator",
+    name: "Profit Margin Calculator",
+    navLabel: "Profit margin",
+    question: "What's my gross, operating, and net profit margin?",
+    summary: "Calculates gross, operating, and net profit margin from revenue, cost of goods sold, and expenses.",
+    formula: "gross margin = (revenue − COGS) ÷ revenue; operating margin = operating profit ÷ revenue; net margin = net profit ÷ revenue",
+    params: ["revenue", "costOfGoodsSold", "operatingExpenses", "interestAndTaxes"],
+    group: "core",
+    kind: "calculator",
+    updated: "2026-10-11",
+  },
+  {
     href: "/markup-margin-chart",
     name: "Markup to Margin Conversion Chart",
     navLabel: "Markup ↔ margin chart",
@@ -136,6 +148,19 @@ export const tools: Tool[] = [
     group: "pricing",
     kind: "calculator",
     updated: "2026-10-06",
+  },
+  {
+    href: "/recipe-cost-calculator",
+    name: "Recipe Cost Calculator",
+    navLabel: "Recipe cost",
+    question: "What does one serving of this recipe cost?",
+    summary: "Costs a recipe ingredient by ingredient, with trim yield, then gives cost per serving and a menu price.",
+    formula: "ingredient cost = package price × amount used ÷ package size ÷ yield; cost per serving = batch cost ÷ servings",
+    // Rows are numbered 1–6: ing1Price, ing1Size, ing1Used, ing1Yield, ing2Price, …
+    params: ["ingNPrice", "ingNSize", "ingNUsed", "ingNYield (N = 1–6)", "servings", "targetFoodCostPercent"],
+    group: "pricing",
+    kind: "calculator",
+    updated: "2026-10-11",
   },
   {
     href: "/freelance-hourly-rate",

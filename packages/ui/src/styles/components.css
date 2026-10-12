@@ -1451,3 +1451,79 @@ input[type="range"]::-moz-range-thumb {
   color: var(--ink);
   text-decoration-color: var(--ink);
 }
+
+/* ============================================================
+   Ingredient table (recipe cost) — a compact row per ingredient
+   ============================================================ */
+.ingredient-table {
+  border: 0;
+  margin: 0 0 var(--space-5);
+  padding: 0;
+  min-width: 0;
+}
+
+.ingredient-table legend {
+  font-weight: 600;
+  margin-bottom: var(--space-1);
+}
+
+.ingredient-table > .field-hint {
+  display: block;
+  margin-bottom: var(--space-3);
+}
+
+.ingredient-head,
+.ingredient-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) repeat(4, minmax(0, 1fr)) 4.5rem;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.ingredient-head {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  padding-bottom: var(--space-2);
+}
+
+.ingredient-row + .ingredient-row {
+  margin-top: var(--space-2);
+}
+
+.ingredient-row input {
+  width: 100%;
+  min-width: 0;
+  padding: var(--space-2);
+  font-size: var(--text-base);
+}
+
+.ingredient-row .input-affix:has(.affix-start) input {
+  padding-left: calc(var(--space-2) + 0.8em);
+}
+
+.ingredient-row output {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+/* Phones: name across the top, the four numbers in a 2×2 grid, cost below. */
+@media (max-width: 40rem) {
+  .ingredient-head {
+    display: none;
+  }
+  .ingredient-row {
+    grid-template-columns: 1fr 1fr;
+    padding: var(--space-3) 0;
+    border-top: 1px solid var(--rule);
+  }
+  .ingredient-row > :first-child {
+    grid-column: 1 / -1;
+  }
+  .ingredient-row output {
+    grid-column: 1 / -1;
+  }
+}

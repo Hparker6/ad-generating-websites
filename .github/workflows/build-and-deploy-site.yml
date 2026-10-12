@@ -15,6 +15,11 @@ on:
         description: "Cloudflare Pages project name to deploy to"
         required: true
         type: string
+      check-domain:
+        description: "Production domain to run scripts/check-site.mjs against (SEO/quality gate). Empty skips it."
+        required: false
+        default: ""
+        type: string
 
 jobs:
   build-and-deploy:
@@ -39,6 +44,17 @@ jobs:
 
       - name: Unit tests (shared packages)
         run: pnpm --filter ${{ inputs.site-filter }}... --filter=./packages/** run test
+
+      # Builds the site as production (real canonicals) into a separate folder
+      # that is never deployed, then fails the job on SEO or quality problems:
+      # titles, descriptions, canonicals, JSON-LD, internal links, near-duplicates.
+      - name: SEO and quality check
+        if: inputs.check-domain != ''
+        run: |
+          pnpm --filter ${{ inputs.site-filter }} exec astro build --outDir dist-check
+          node scripts/check-site.mjs ${{ inputs.site-dist-path }}-check https://${{ inputs.check-domain }}
+        env:
+          PUBLIC_SITE_DOMAIN: ${{ inputs.check-domain }}
 
       # Builds here never see Cloudflare dashboard variables: when deploying
       # from Actions, set these as GitHub repository variables (Settings →
